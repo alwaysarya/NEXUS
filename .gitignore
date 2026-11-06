@@ -59,3 +59,9 @@ id_ed25519
 
 # Local runtime data
 local-data/
+
+# Backup and temporary editor files
+*.backup
+*.bak
+*.tsbuildinfo
+*-backup.*
