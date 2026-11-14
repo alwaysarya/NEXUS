@@ -1,4 +1,7 @@
 {
   "name": "nexus",
-  "private": true
+  "private": true,
+  "dependencies": {
+    "react-router-dom": "^7.18.5"
+  }
 }
