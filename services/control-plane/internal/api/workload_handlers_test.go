@@ -77,6 +77,18 @@ func (f *workloadAPIRepository) Complete(_ context.Context, id string) error {
 	return nil
 }
 
+func (f *workloadAPIRepository) ClaimNext(context.Context, string) (storage.Workload, error) {
+	return storage.Workload{}, storage.ErrNoPendingWorkload
+}
+
+func (f *workloadAPIRepository) ReportRunning(context.Context, string, string, string) error {
+	return nil
+}
+
+func (f *workloadAPIRepository) ReportFailure(context.Context, string, string, string) error {
+	return nil
+}
+
 func newWorkloadAPITestServer() (*http.ServeMux, *workloadAPIRepository) {
 	repo := newWorkloadAPIRepository()
 	nodes := workloadAPINodes{nodes: []storage.Node{
@@ -85,7 +97,7 @@ func newWorkloadAPITestServer() (*http.ServeMux, *workloadAPIRepository) {
 			Status: "online",
 		},
 	}}
-	s := scheduler.New(nodes, workloadAPIAllocator{})
+	s := scheduler.New(nodes)
 	mux := http.NewServeMux()
 	RegisterWorkloadRoutes(mux, s, repo)
 	return mux, repo

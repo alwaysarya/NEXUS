@@ -64,7 +64,7 @@ func (repo *PostgresWorkloadRepository) Create(
 	_, err = tx.Exec(ctx, `
 		INSERT INTO workloads (id, node_id, cpu_cores, memory_mb)
 		VALUES ($1, $2, $3, $4)
-	`, workload.ID, workload.NodeID, workload.CPUCores, workload.MemoryMB)
+	`, workload.ID, workload.NodeID, workload.CPUCores, workload.MemoryMB, workload.Image, workload.Command)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
@@ -89,7 +89,7 @@ func (repo *PostgresWorkloadRepository) GetByID(
 
 	err := repo.db.Pool.QueryRow(ctx, `
 		SELECT id, node_id, cpu_cores, memory_mb, status,
-		       created_at, completed_at
+		       created_at, completed_at, image, command, container_id, error_message
 		FROM workloads
 		WHERE id = $1
 	`, id).Scan(
@@ -100,6 +100,10 @@ func (repo *PostgresWorkloadRepository) GetByID(
 		&workload.Status,
 		&workload.CreatedAt,
 		&completedAt,
+		&workload.Image,
+		&workload.Command,
+		&workload.ContainerID,
+		&workload.ErrorMessage,
 	)
 
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -118,7 +122,7 @@ func (repo *PostgresWorkloadRepository) List(
 ) ([]Workload, error) {
 	rows, err := repo.db.Pool.Query(ctx, `
 		SELECT id, node_id, cpu_cores, memory_mb, status,
-		       created_at, completed_at
+		       created_at, completed_at, image, command, container_id, error_message
 		FROM workloads
 		ORDER BY created_at DESC
 	`)
@@ -141,6 +145,10 @@ func (repo *PostgresWorkloadRepository) List(
 			&workload.Status,
 			&workload.CreatedAt,
 			&completedAt,
+			&workload.Image,
+			&workload.Command,
+			&workload.ContainerID,
+			&workload.ErrorMessage,
 		); err != nil {
 			return nil, fmt.Errorf("scan workload: %w", err)
 		}
@@ -223,4 +231,75 @@ func (repo *PostgresWorkloadRepository) Complete(
 	}
 
 	return nil
+}
+
+func (repo *PostgresWorkloadRepository) ClaimNext(ctx context.Context, nodeID string) (Workload, error) {
+	var w Workload
+	err := repo.db.Pool.QueryRow(ctx, `
+		UPDATE workloads SET status='deploying', updated_at=NOW()
+		WHERE id=(
+			SELECT id FROM workloads
+			WHERE node_id=$1 AND status='pending'
+			ORDER BY created_at
+			FOR UPDATE SKIP LOCKED LIMIT 1
+		)
+		RETURNING id,node_id,cpu_cores,memory_mb,status,created_at,completed_at,
+		          image,command,container_id,error_message
+	`, nodeID).Scan(&w.ID, &w.NodeID, &w.CPUCores, &w.MemoryMB, &w.Status,
+		&w.CreatedAt, &w.CompletedAt, &w.Image, &w.Command, &w.ContainerID, &w.ErrorMessage)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return Workload{}, ErrNoPendingWorkload
+	}
+	if err != nil {
+		return Workload{}, fmt.Errorf("claim workload: %w", err)
+	}
+	return w, nil
+}
+
+func (repo *PostgresWorkloadRepository) ReportRunning(ctx context.Context, id, nodeID, containerID string) error {
+	tag, err := repo.db.Pool.Exec(ctx, `
+		UPDATE workloads SET status='running',container_id=$3,updated_at=NOW()
+		WHERE id=$1 AND node_id=$2 AND status='deploying'
+	`, id, nodeID, containerID)
+	if err != nil {
+		return fmt.Errorf("report running workload: %w", err)
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrWorkloadNotFound
+	}
+	return nil
+}
+
+func (repo *PostgresWorkloadRepository) ReportFailure(ctx context.Context, id, nodeID, message string) error {
+	tx, err := repo.db.Pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+	var w Workload
+	err = tx.QueryRow(ctx, `SELECT id,node_id,cpu_cores,memory_mb FROM workloads
+		WHERE id=$1 AND node_id=$2 AND status IN ('deploying','running') FOR UPDATE`,
+		id, nodeID).Scan(&w.ID, &w.NodeID, &w.CPUCores, &w.MemoryMB)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return ErrWorkloadNotFound
+	}
+	if err != nil {
+		return err
+	}
+	tag, err := tx.Exec(ctx, `UPDATE nodes SET allocated_cpu_cores=allocated_cpu_cores-$2,
+		allocated_memory_mb=allocated_memory_mb-$3 WHERE id=$1
+		AND allocated_cpu_cores >= $2 AND allocated_memory_mb >= $3`,
+		w.NodeID, w.CPUCores, w.MemoryMB)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() != 1 {
+		return fmt.Errorf("resource accounting mismatch for workload %s", id)
+	}
+	_, err = tx.Exec(ctx, `UPDATE workloads SET status='failed',error_message=$2,
+		updated_at=NOW(),completed_at=NOW() WHERE id=$1`, id, message)
+	if err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
 }

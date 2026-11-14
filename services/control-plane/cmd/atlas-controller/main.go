@@ -47,7 +47,7 @@ func main() {
 
 	mux := http.NewServeMux()
 	api.RegisterRoutes(mux, nodeAPI)
-	workloadScheduler := scheduler.New(repository, repository)
+	workloadScheduler := scheduler.New(repository)
 	workloadRepository := storage.NewPostgresWorkloadRepository(db)
 	api.RegisterWorkloadRoutes(mux, workloadScheduler, workloadRepository)
 

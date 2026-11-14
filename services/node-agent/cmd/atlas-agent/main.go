@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -12,6 +13,7 @@ import (
 	"github.com/alwaysarya/nexus/services/node-agent/internal/client"
 	"github.com/alwaysarya/nexus/services/node-agent/internal/config"
 	"github.com/alwaysarya/nexus/services/node-agent/internal/retry"
+	containerruntime "github.com/alwaysarya/nexus/services/node-agent/internal/runtime"
 	"github.com/alwaysarya/nexus/services/node-agent/internal/system"
 )
 
@@ -63,46 +65,70 @@ func main() {
 		return
 	}
 
-	ticker := time.NewTicker(cfg.HeartbeatInterval)
+	docker := containerruntime.NewDocker()
+	ticker := time.NewTicker(2 * time.Second)
 	defer ticker.Stop()
-
-	log.Printf("Heartbeat interval: %s", cfg.HeartbeatInterval)
+	log.Println("NEXUS workload polling started")
 
 	for {
 		select {
 		case <-ctx.Done():
 			log.Println("NEXUS Node Agent shutting down")
 			return
-
 		case <-ticker.C:
 			if err := sendHeartbeatWithRetry(ctx, nexusClient, cfg); err != nil {
 				if errors.Is(err, context.Canceled) {
-					log.Println("NEXUS Node Agent shutting down")
 					return
 				}
-				log.Printf("Heartbeat stopped: %v", err)
-				return
+				log.Printf("Heartbeat error: %v", err)
+				continue
+			}
+			if err := processWorkload(ctx, nexusClient, docker, cfg); err != nil {
+				log.Printf("Workload processing: %v", err)
 			}
 		}
 	}
 }
 
-func sendHeartbeatWithRetry(ctx context.Context, c *client.Client, cfg config.Config) error {
-	err := retry.Do(ctx, time.Second, 30*time.Second,
-		func(ctx context.Context) error {
-			requestCtx, cancel := context.WithTimeout(ctx, cfg.RequestTimeout)
-			defer cancel()
-
-			err := c.Heartbeat(requestCtx, cfg.NodeID)
-			if err == nil {
-				log.Printf("Heartbeat successful: %s", cfg.NodeID)
-			}
-			return err
-		},
-	)
-
-	if errors.Is(err, context.Canceled) {
+func processWorkload(ctx context.Context, c *client.Client, docker *containerruntime.Docker, cfg config.Config) error {
+	requestCtx, cancel := context.WithTimeout(ctx, cfg.RequestTimeout)
+	workload, err := c.ClaimNext(requestCtx, cfg.NodeID)
+	cancel()
+	if err != nil || workload == nil {
 		return err
 	}
-	return err
+
+	log.Printf("Deploying workload %s using %s", workload.ID, workload.Image)
+	runCtx, runCancel := context.WithTimeout(ctx, 5*time.Minute)
+	containerID, err := docker.Run(runCtx, workload.ID, workload.Image,
+		workload.CPUCores, workload.MemoryMB, workload.Command)
+	runCancel()
+
+	reportCtx, reportCancel := context.WithTimeout(ctx, cfg.RequestTimeout)
+	defer reportCancel()
+
+	if err != nil {
+		if reportErr := c.ReportFailure(reportCtx, cfg.NodeID, workload.ID, err.Error()); reportErr != nil {
+			return fmt.Errorf("Docker error: %v; report error: %w", err, reportErr)
+		}
+		return err
+	}
+
+	if err := c.ReportRunning(reportCtx, cfg.NodeID, workload.ID, containerID); err != nil {
+		return fmt.Errorf("container started but status report failed: %w", err)
+	}
+	log.Printf("Workload %s running: %s", workload.ID, containerID)
+	return nil
+}
+
+func sendHeartbeatWithRetry(ctx context.Context, c *client.Client, cfg config.Config) error {
+	return retry.Do(ctx, time.Second, 30*time.Second, func(ctx context.Context) error {
+		requestCtx, cancel := context.WithTimeout(ctx, cfg.RequestTimeout)
+		defer cancel()
+		err := c.Heartbeat(requestCtx, cfg.NodeID)
+		if err == nil {
+			log.Printf("Heartbeat successful: %s", cfg.NodeID)
+		}
+		return err
+	})
 }
