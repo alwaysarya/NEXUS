@@ -639,11 +639,91 @@ const SettingsPage = () => {
             </>
           )}
 
-          {(activeTab === 'Billing' || activeTab === 'Team') && (
-            <div style={{ textAlign: 'center', padding: '40px 20px' }}>
-              <h2 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: '600' }}>{activeTab}</h2>
-              <p style={{ margin: 0, color: C.muted, fontSize: '13px' }}>This feature is coming soon.</p>
-            </div>
+          {activeTab === 'Billing' && (
+            <>
+              <h2 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: '600' }}>Billing & Usage</h2>
+              <p style={{ margin: '0 0 24px 0', color: C.muted, fontSize: '13px' }}>Manage your subscription and view current usage.</p>
+              
+              {/* Current Plan */}
+              <div style={{ background: `linear-gradient(135deg, ${C.primary}20, transparent)`, border: `1px solid ${C.primary}`, borderRadius: '8px', padding: '20px', marginBottom: '24px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '600' }}>Pro Plan</h3>
+                  <span style={{ backgroundColor: C.primary, color: 'white', padding: '4px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: '600' }}>ACTIVE</span>
+                </div>
+                <p style={{ margin: '0 0 16px 0', color: C.muted, fontSize: '13px' }}>Next billing date: Dec 15, 2024</p>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button style={{ ...btnStyle, background: C.primary }}>Upgrade Plan</button>
+                  <button style={{ ...btnStyle, background: 'transparent', border: `1px solid ${C.border}`, color: C.text }}>Manage Billing</button>
+                </div>
+              </div>
+
+              {/* Usage Stats */}
+              <h3 style={{ margin: '0 0 16px 0', fontSize: '15px', fontWeight: '600' }}>Current Usage</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+                <div style={{ backgroundColor: C.bg, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '16px' }}>
+                  <p style={{ margin: '0 0 8px 0', fontSize: '12px', color: C.muted }}>Compute Hours</p>
+                  <h4 style={{ margin: 0, fontSize: '20px', fontWeight: '600' }}>142 <span style={{ color: C.muted, fontSize: '14px', fontWeight: '400' }}>/ 500 hrs</span></h4>
+                  <div style={{ width: '100%', height: '4px', backgroundColor: C.border, borderRadius: '2px', marginTop: '12px' }}><div style={{ width: '28%', height: '100%', backgroundColor: C.primary, borderRadius: '2px' }}></div></div>
+                </div>
+                <div style={{ backgroundColor: C.bg, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '16px' }}>
+                  <p style={{ margin: '0 0 8px 0', fontSize: '12px', color: C.muted }}>Storage Used</p>
+                  <h4 style={{ margin: 0, fontSize: '20px', fontWeight: '600' }}>24 <span style={{ color: C.muted, fontSize: '14px', fontWeight: '400' }}>/ 100 GB</span></h4>
+                  <div style={{ width: '100%', height: '4px', backgroundColor: C.border, borderRadius: '2px', marginTop: '12px' }}><div style={{ width: '24%', height: '100%', backgroundColor: C.success, borderRadius: '2px' }}></div></div>
+                </div>
+              </div>
+
+              {/* Invoices */}
+              <h3 style={{ margin: '0 0 16px 0', fontSize: '15px', fontWeight: '600' }}>Recent Invoices</h3>
+              <div style={{ border: `1px solid ${C.border}`, borderRadius: '8px' }}>
+                {[
+                  { id: 'INV-2024-011', date: 'Nov 15, 2024', amount: '$99.00', status: 'Paid' },
+                  { id: 'INV-2024-010', date: 'Oct 15, 2024', amount: '$99.00', status: 'Paid' },
+                  { id: 'INV-2024-009', date: 'Sep 15, 2024', amount: '$99.00', status: 'Paid' },
+                ].map((inv, i) => (
+                  <div key={i} style={{ padding: '14px 20px', borderBottom: i !== 2 ? `1px solid ${C.border}` : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px' }}>
+                    <span style={{ fontFamily: 'monospace', color: C.muted }}>{inv.id}</span>
+                    <span>{inv.date}</span>
+                    <span style={{ fontWeight: '500' }}>{inv.amount}</span>
+                    <span style={{ color: C.success, backgroundColor: 'rgba(34,197,94,0.1)', padding: '2px 8px', borderRadius: '4px', fontSize: '11px' }}>{inv.status}</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {activeTab === 'Team' && (
+            <>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                <div>
+                  <h2 style={{ margin: '0 0 4px 0', fontSize: '18px', fontWeight: '600' }}>Team Members</h2>
+                  <p style={{ margin: 0, color: C.muted, fontSize: '13px' }}>Manage who has access to your NEXUS workspace.</p>
+                </div>
+                <button style={btnStyle}><Plus size={16}/> Invite Member</button>
+              </div>
+
+              <div style={{ border: `1px solid ${C.border}`, borderRadius: '8px' }}>
+                {[
+                  { name: 'Admin User', email: 'admin@nexus.io', role: 'Owner', status: 'Active' },
+                  { name: 'Aryan Thakur', email: 'aryan@nexus.io', role: 'Admin', status: 'Active' },
+                  { name: 'Dev Team', email: 'dev@nexus.io', role: 'Viewer', status: 'Active' },
+                  { name: 'Pending Invite', email: 'newmember@nexus.io', role: 'Viewer', status: 'Pending' },
+                ].map((member, i) => (
+                  <div key={i} style={{ padding: '16px 20px', borderBottom: i !== 3 ? `1px solid ${C.border}` : 'none', display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: i === 0 ? '#4f46e5' : i === 1 ? C.success : C.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 'bold', color: 'white' }}>{member.name.charAt(0)}</div>
+                    <div style={{ flex: 1 }}>
+                      <h4 style={{ margin: 0, fontSize: '14px', fontWeight: '500' }}>{member.name}</h4>
+                      <p style={{ margin: '2px 0 0 0', fontSize: '12px', color: C.muted }}>{member.email}</p>
+                    </div>
+                    <span style={{ fontSize: '12px', backgroundColor: C.sidebar, border: `1px solid ${C.border}`, padding: '4px 10px', borderRadius: '4px', color: C.muted }}>{member.role}</span>
+                    <span style={{ fontSize: '11px', color: member.status === 'Active' ? C.success : C.warning, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: member.status === 'Active' ? C.success : C.warning }}></div>
+                      {member.status}
+                    </span>
+                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.muted }}><MoreHorizontal size={16}/></button>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
       </div>
