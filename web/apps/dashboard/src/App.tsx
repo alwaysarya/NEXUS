@@ -172,13 +172,21 @@ function App() {
 const Overview = ({ nodes, workloads, isHealthy, isLoading, sysStats, chartData }: any) => {
   const [activeTab, setActiveTab] = useState('Nodes');
   const [filterStatus, setFilterStatus] = useState('All');
+  const [filterZone, setFilterZone] = useState('All');
+  const [searchTable, setSearchTable] = useState('');
+
   if (isLoading) return <div style={{ padding: '40px', color: 'white', textAlign: 'center' }}><Activity size={32} /><p>Loading cluster data...</p></div>;
 
-  const filteredNodes = nodes.filter((n: any) => filterStatus === 'All' || n.status === filterStatus.toLowerCase());
+  const filteredNodes = nodes.filter((n: any) => {
+    const matchesSearch = (n.hostname || '').toLowerCase().includes(searchTable.toLowerCase());
+    const matchesStatus = filterStatus === 'All' || n.status === filterStatus.toLowerCase();
+    return matchesSearch && matchesStatus;
+  });
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       
+      {/* 6 KPI Cards with Sparklines */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '16px' }}>
         {[
           { label: 'Cluster Health', val: isHealthy ? 'Healthy' : 'Offline', color: isHealthy ? C.success : C.danger, icon: <CheckCircle2 size={16} color={isHealthy ? C.success : C.danger} />, spark: isHealthy ? [1,1,1,1,1,1,1,1] : [0,0,0,0,0,0,0,0] },
@@ -189,7 +197,9 @@ const Overview = ({ nodes, workloads, isHealthy, isLoading, sysStats, chartData 
           { label: 'Memory', val: sysStats ? `${sysStats.allocated_mb} MB` : '0 MB', color: C.success, icon: <Database size={16} color={C.success} />, spark: [40, 42, 45, 43, 50, 48, 52, 55] },
         ].map((s, i) => (
           <div key={i} style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><span style={{ color: C.muted, fontSize: '12px', fontWeight: '500', textTransform: 'uppercase' }}>{s.label}</span>{s.icon}</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ color: C.muted, fontSize: '12px', fontWeight: '500', textTransform: 'uppercase' }}>{s.label}</span>{s.icon}
+            </div>
             <div style={{ fontSize: '24px', fontWeight: '600', color: s.color, marginTop: '4px' }}>{s.val}</div>
             <Sparkline data={s.spark} color={s.color === C.text ? C.primary : s.color} />
           </div>
@@ -197,9 +207,9 @@ const Overview = ({ nodes, workloads, isHealthy, isLoading, sysStats, chartData 
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
-        
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           
+          {/* Cluster Topology */}
           <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '20px', minHeight: '260px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
               <h2 style={{ margin: 0, fontSize: '16px', fontWeight: '600' }}>Cluster Topology</h2>
@@ -222,6 +232,7 @@ const Overview = ({ nodes, workloads, isHealthy, isLoading, sysStats, chartData 
             </div>
           </div>
 
+          {/* Tabbed Table with Filters */}
           <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px' }}>
             <div style={{ display: 'flex', borderBottom: `1px solid ${C.border}`, padding: '0 20px' }}>
               {['Nodes', 'Pods', 'Workloads'].map((tab) => (
@@ -230,9 +241,15 @@ const Overview = ({ nodes, workloads, isHealthy, isLoading, sysStats, chartData 
             </div>
             
             <div style={{ padding: '16px 20px', display: 'flex', gap: '12px', alignItems: 'center', borderBottom: `1px solid ${C.border}` }}>
-              <input type="text" placeholder={`Search ${activeTab.toLowerCase()}...`} style={{ ...inputStyle, marginBottom: 0, width: '220px', padding: '6px 12px', fontSize: '13px' }} />
+              <div style={{ position: 'relative', flex: 1, maxWidth: '300px' }}>
+                <Search size={14} color={C.muted} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
+                <input type="text" placeholder={`Search ${activeTab.toLowerCase()}...`} value={searchTable} onChange={(e) => setSearchTable(e.target.value)} style={{ ...inputStyle, marginBottom: 0, paddingLeft: '36px', fontSize: '13px' }} />
+              </div>
               <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} style={{ ...inputStyle, marginBottom: 0, width: '120px', padding: '6px 12px', fontSize: '13px' }}>
                 <option>All</option><option>Active</option><option>Pending</option>
+              </select>
+              <select value={filterZone} onChange={(e) => setFilterZone(e.target.value)} style={{ ...inputStyle, marginBottom: 0, width: '120px', padding: '6px 12px', fontSize: '13px' }}>
+                <option>All Zones</option><option>us-east-1a</option><option>us-east-1b</option>
               </select>
               <button style={{ ...btnStyle, background: 'transparent', border: `1px solid ${C.border}`, color: C.muted, padding: '6px 12px', fontSize: '13px' }}>Export</button>
               <button style={{ ...btnStyle, padding: '6px 12px', fontSize: '13px' }}><Plus size={14}/> Add</button>
@@ -258,22 +275,15 @@ const Overview = ({ nodes, workloads, isHealthy, isLoading, sysStats, chartData 
           </div>
         </div>
 
+        {/* Right Column - No Change */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          
           <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '20px' }}>
             <h2 style={{ margin: '0 0 20px 0', fontSize: '16px', fontWeight: '600' }}>Resource Utilization</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '8px' }}><span style={{ color: C.muted }}>CPU Usage</span><span>{sysStats ? (sysStats.goroutines * 2.5).toFixed(1) : 0}%</span></div>
-                <div style={{ width: '100%', height: '6px', backgroundColor: C.border, borderRadius: '3px' }}><div style={{ width: `${sysStats ? Math.min(100, sysStats.goroutines * 2.5) : 0}%`, height: '100%', backgroundColor: C.primary, borderRadius: '3px' }}></div></div>
-              </div>
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '8px' }}><span style={{ color: C.muted }}>Memory</span><span>{sysStats ? sysStats.allocated_mb : 0} MB</span></div>
-                <div style={{ width: '100%', height: '6px', backgroundColor: C.border, borderRadius: '3px' }}><div style={{ width: `${sysStats ? Math.min(100, (sysStats.allocated_mb / 1024) * 100) : 0}%`, height: '100%', backgroundColor: C.success, borderRadius: '3px' }}></div></div>
-              </div>
+              <div><div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '8px' }}><span style={{ color: C.muted }}>CPU Usage</span><span>{sysStats ? (sysStats.goroutines * 2.5).toFixed(1) : 0}%</span></div><div style={{ width: '100%', height: '6px', backgroundColor: C.border, borderRadius: '3px' }}><div style={{ width: `${sysStats ? Math.min(100, sysStats.goroutines * 2.5) : 0}%`, height: '100%', backgroundColor: C.primary, borderRadius: '3px' }}></div></div></div>
+              <div><div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '8px' }}><span style={{ color: C.muted }}>Memory</span><span>{sysStats ? sysStats.allocated_mb : 0} MB</span></div><div style={{ width: '100%', height: '6px', backgroundColor: C.border, borderRadius: '3px' }}><div style={{ width: `${sysStats ? Math.min(100, (sysStats.allocated_mb / 1024) * 100) : 0}%`, height: '100%', backgroundColor: C.success, borderRadius: '3px' }}></div></div></div>
             </div>
           </div>
-
           <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '20px' }}>
             <h2 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '600' }}>Recent Events</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
