@@ -25,12 +25,6 @@ func main() {
 	}
 	defer db.Close()
 
-	if err := db.Ping(); err != nil {
-		log.Printf("Warning: DB not reachable: %v", err)
-	} else {
-		log.Println("Connected to database")
-	}
-
 	nodeRepo := storage.NewPostgresNodeRepository(db)
 	workloadRepo := storage.NewPostgresWorkloadRepository(db)
 	sched := scheduler.NewScheduler(nodeRepo, workloadRepo)
@@ -38,7 +32,7 @@ func main() {
 	nodeHandlers := api.NewHandlers(nodeRepo)
 	workloadHandlers := api.NewWorkloadHandler(workloadRepo, sched)
 	authHandler := api.NewAuthHandler()
-	healthHandler := api.NewHealthHandler()
+	healthHandler := api.NewHealthHandler(db) // Yahan db pass kiya
 
 	mux := http.NewServeMux()
 	api.RegisterRoutes(mux, nodeHandlers, workloadHandlers, authHandler, healthHandler)
