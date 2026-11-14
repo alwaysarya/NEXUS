@@ -6,12 +6,13 @@ import (
 
 func RegisterRoutes(mux *http.ServeMux, h *Handlers, w *WorkloadHandler, auth *AuthHandler, health *HealthHandler, metrics *MetricsHandler) {
 	// Public Routes
+	mux.HandleFunc("POST /api/v1/register", auth.Register)
 	mux.HandleFunc("POST /api/v1/login", auth.Login)
 	mux.HandleFunc("GET /health/live", health.Live)
 	mux.HandleFunc("GET /health/ready", health.Ready)
-	mux.HandleFunc("GET /metrics", metrics.ServeMetrics) // Prometheus Metrics
+	mux.HandleFunc("GET /metrics", metrics.ServeMetrics)
 
-	// Protected Routes (Needs JWT Token)
+	// Protected Routes
 	mux.HandleFunc("POST /api/v1/nodes", AuthMiddleware(h.RegisterNode))
 	mux.HandleFunc("GET /api/v1/nodes", AuthMiddleware(h.ListNodes))
 	mux.HandleFunc("GET /api/v1/nodes/{id}", AuthMiddleware(h.GetNode))

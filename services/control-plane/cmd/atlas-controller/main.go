@@ -27,11 +27,13 @@ func main() {
 
 	nodeRepo := storage.NewPostgresNodeRepository(db)
 	workloadRepo := storage.NewPostgresWorkloadRepository(db)
+	userRepo := storage.NewPostgresUserRepository(db)
+	
 	sched := scheduler.NewScheduler(nodeRepo, workloadRepo)
 
 	nodeHandlers := api.NewHandlers(nodeRepo)
 	workloadHandlers := api.NewWorkloadHandler(workloadRepo, sched)
-	authHandler := api.NewAuthHandler()
+	authHandler := api.NewAuthHandler(userRepo)
 	healthHandler := api.NewHealthHandler(db)
 	metricsHandler := api.NewMetricsHandler()
 
