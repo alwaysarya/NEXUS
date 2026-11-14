@@ -5,6 +5,9 @@ cd "$ROOT_DIR" || exit
 echo "🚀 Starting NEXUS Infrastructure..."
 export DATABASE_URL="postgres://atlas:atlas@localhost:5432/nexus?sslmode=disable"
 
+echo "📊 Starting Monitoring (Prometheus + Grafana)..."
+docker-compose -f docker-compose.monitoring.yml up -d > /dev/null 2>&1
+
 echo "⚙️  Starting Control Plane on :8080..."
 cd "$ROOT_DIR/services/control-plane" || exit
 go run cmd/atlas-controller/main.go &
@@ -28,8 +31,9 @@ echo "---------------------------------------------------"
 echo "🎉 NEXUS is UP and RUNNING!"
 echo "Dashboard: http://localhost:5173"
 echo "Backend API: http://localhost:8080"
+echo "Grafana: http://localhost:3001"
 echo "---------------------------------------------------"
 echo "Press Ctrl+C to stop all services."
 
-trap "echo -e '\n🛑 Stopping NEXUS...'; kill $BACKEND_PID $FRONTEND_PID $AGENT_PID; exit" INT
+trap "echo -e '\n🛑 Stopping NEXUS...'; kill $BACKEND_PID $FRONTEND_PID $AGENT_PID; docker-compose -f docker-compose.monitoring.yml down; exit" INT
 wait

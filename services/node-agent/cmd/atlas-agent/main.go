@@ -24,60 +24,83 @@ type NodePayload struct {
 }
 
 var registeredNodeID string
+var authToken string
 var dockerCli *client.Client
 var runningWorkloads = make(map[string]bool)
+
+func authReq(method, url string, body io.Reader) (*http.Response, error) {
+	req, err := http.NewRequest(method, url, body)
+	if err != nil { return nil, err }
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+authToken)
+	httpClient := &http.Client{}
+	return httpClient.Do(req)
+}
 
 func main() {
 	fmt.Println("🤖 Starting NEXUS Node Agent...")
 	
 	var err error
 	dockerCli, err = client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-	if err != nil {
-		log.Fatalf("❌ Failed to connect to Docker: %v", err)
-	}
+	if err != nil { log.Fatalf("❌ Failed to connect to Docker: %v", err) }
 	fmt.Println("🐳 Connected to Docker daemon")
 
+	// 1. Login
+	loginPayload := map[string]string{"username": "admin", "password": "admin123"}
+	loginJSON, _ := json.Marshal(loginPayload)
+	respLogin, _ := http.Post("http://localhost:8080/api/v1/login", "application/json", bytes.NewBuffer(loginJSON))
+	var loginResult map[string]string
+	json.NewDecoder(respLogin.Body).Decode(&loginResult)
+	authToken = loginResult["token"]
+	respLogin.Body.Close()
+	fmt.Println("🔑 Logged in successfully")
+
+	// 2. Check existing nodes
 	hostname := "agent-node-mac"
-	cpuCores := runtime.NumCPU()
-	memoryMB := int64(16384)
-	
-	payload := NodePayload{
-		Hostname:  hostname,
-		IPAddress: "127.0.0.1",
-		CPUCores:  cpuCores,
-		MemoryMB:  memoryMB,
+	nodesResp, _ := authReq("GET", "http://localhost:8080/api/v1/nodes", nil)
+	var nodes []map[string]interface{}
+	json.NewDecoder(nodesResp.Body).Decode(&nodes)
+	nodesResp.Body.Close()
+
+	for _, n := range nodes {
+		if n["hostname"] == hostname {
+			registeredNodeID = n["id"].(string)
+			fmt.Printf("✅ Found existing node! Node ID: %s\n", registeredNodeID)
+			break
+		}
 	}
 
-	jsonData, _ := json.Marshal(payload)
-	fmt.Println("Registering with Control Plane...")
-	resp, err := http.Post("http://localhost:8080/api/v1/nodes", "application/json", bytes.NewBuffer(jsonData))
-	if err != nil {
-		log.Fatalf("Error connecting: %v", err)
+	// 3. Register if not found
+	if registeredNodeID == "" {
+		cpuCores := runtime.NumCPU()
+		payload := NodePayload{Hostname: hostname, IPAddress: "127.0.0.1", CPUCores: cpuCores, MemoryMB: 16384}
+		jsonData, _ := json.Marshal(payload)
+		
+		fmt.Println("Registering new node with Control Plane...")
+		resp, err := authReq("POST", "http://localhost:8080/api/v1/nodes", bytes.NewBuffer(jsonData))
+		if err != nil || resp.StatusCode != http.StatusCreated {
+			log.Fatalf("❌ Failed to register. Status: %v", resp.StatusCode)
+		}
+		var result map[string]interface{}
+		json.NewDecoder(resp.Body).Decode(&result)
+		registeredNodeID = result["id"].(string)
+		resp.Body.Close()
+		fmt.Printf("✅ Registered! Node ID: %s\n", registeredNodeID)
 	}
-	defer resp.Body.Close()
-
-	var result map[string]interface{}
-	json.NewDecoder(resp.Body).Decode(&result)
-	registeredNodeID = result["id"].(string)
 	
-	fmt.Printf("✅ Registered! Node ID: %s\n", registeredNodeID)
 	fmt.Println("Starting heartbeat & workload sync...")
 	
 	for {
 		time.Sleep(10 * time.Second)
 		
-		statusPayload := map[string]string{"status": "active"}
-		statusJSON, _ := json.Marshal(statusPayload)
-		req, _ := http.NewRequest(http.MethodPatch, fmt.Sprintf("http://localhost:8080/api/v1/nodes/%s/status", registeredNodeID), bytes.NewBuffer(statusJSON))
-		req.Header.Set("Content-Type", "application/json")
-		httpClient := &http.Client{}
-		res, err := httpClient.Do(req)
-		if err == nil && res.StatusCode == 200 {
-			fmt.Println("💓 Heartbeat sent (status: active)")
+		statusJSON, _ := json.Marshal(map[string]string{"status": "active"})
+		res, _ := authReq(http.MethodPatch, fmt.Sprintf("http://localhost:8080/api/v1/nodes/%s/status", registeredNodeID), bytes.NewBuffer(statusJSON))
+		if res != nil { 
+			if res.StatusCode == 200 { fmt.Println("💓 Heartbeat sent (status: active)") }
+			res.Body.Close() 
 		}
-		if res != nil { res.Body.Close() }
 
-		wlResp, err := http.Get(fmt.Sprintf("http://localhost:8080/api/v1/nodes/%s/workloads", registeredNodeID))
+		wlResp, err := authReq("GET", fmt.Sprintf("http://localhost:8080/api/v1/nodes/%s/workloads", registeredNodeID), nil)
 		if err == nil && wlResp.StatusCode == 200 {
 			var workloads []map[string]interface{}
 			json.NewDecoder(wlResp.Body).Decode(&workloads)
@@ -104,23 +127,15 @@ func main() {
 
 func runDockerContainer(workloadID string, imageName string) error {
 	ctx := context.Background()
-
 	reader, err := dockerCli.ImagePull(ctx, imageName, image.PullOptions{})
-	if err != nil {
-		return err
-	}
+	if err != nil { return err }
 	defer reader.Close()
 	io.Copy(io.Discard, reader)
 
 	containerName := fmt.Sprintf("nexus-wl-%s", workloadID[:8])
-	
 	resp, err := dockerCli.ContainerCreate(ctx, &container.Config{
-		Image: imageName,
-		Cmd:   []string{"sleep", "infinity"},
+		Image: imageName, Cmd: []string{"sleep", "infinity"},
 	}, nil, nil, nil, containerName)
-	if err != nil {
-		return err
-	}
-
+	if err != nil { return err }
 	return dockerCli.ContainerStart(ctx, resp.ID, container.StartOptions{})
 }

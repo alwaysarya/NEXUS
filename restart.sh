@@ -4,6 +4,10 @@ kill $(lsof -t -i:8080) 2>/dev/null
 kill $(lsof -t -i:5173) 2>/dev/null
 pkill -f "atlas-agent" 2>/dev/null
 pkill -f "vite" 2>/dev/null
+
+# Purane Monitoring containers band karo
+docker-compose -f docker-compose.monitoring.yml down > /dev/null 2>&1
+
 sleep 2
 
 echo "🧹 Cleaning up old data..."
