@@ -226,6 +226,12 @@ function App() {
   const [sysStats, setSysStats] = useState<any>(null); const [isHealthy, setIsHealthy] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [notifications, setNotifications] = useState<string[]>([]);
+  const [chartData, setChartData] = useState<any[]>([
+    { time: '10:00', cpu: 25, mem: 40 }, { time: '10:05', cpu: 35, mem: 45 },
+    { time: '10:10', cpu: 45, mem: 55 }, { time: '10:15', cpu: 30, mem: 50 },
+    { time: '10:20', cpu: 50, mem: 60 }, { time: '10:25', cpu: 40, mem: 55 },
+    { time: '10:30', cpu: 35, mem: 48 }
+  ]);
   const [isCmdOpen, setIsCmdOpen] = useState(false);
 
   useEffect(() => {
@@ -246,7 +252,28 @@ function App() {
     fetch('/health/ready').then(res => setIsHealthy(res.ok)).catch(() => setIsHealthy(false));
   };
 
-  useEffect(() => { if (token) { fetchData(); const interval = setInterval(fetchData, 5000); return () => clearInterval(interval); } }, [token]);
+  useEffect(() => { 
+    if (token) { 
+      fetchData(); 
+      const interval = setInterval(fetchData, 5000); 
+      
+      // Simulate real-time chart updates
+      const chartInterval = setInterval(() => {
+        setChartData((prev: any[]) => {
+          const now = new Date();
+          const timeStr = now.getHours() + ':' + now.getMinutes().toString().padStart(2, '0');
+          const newPoint = { 
+            time: timeStr, 
+            cpu: Math.floor(Math.random() * 40) + 20, 
+            mem: Math.floor(Math.random() * 30) + 40 
+          };
+          return [...prev.slice(1), newPoint];
+        });
+      }, 3000);
+
+      return () => { clearInterval(interval); clearInterval(chartInterval); };
+    } 
+  }, [token]);
 
   const handleLogin = (e: any) => {
     e.preventDefault();
@@ -281,7 +308,7 @@ function App() {
       <CommandPalette isOpen={isCmdOpen} onClose={() => setIsCmdOpen(false)} />
       <DashboardLayout role={role} handleLogout={handleLogout} isHealthy={isHealthy} searchQuery={searchQuery} setSearchQuery={setSearchQuery} notifications={notifications} nodes={nodes} workloads={workloads}>
         <Routes>
-          <Route path="/" element={<Overview nodes={nodes} workloads={workloads} isHealthy={isHealthy} sysStats={sysStats} searchQuery={searchQuery} />} />
+          <Route path="/" element={<Overview nodes={nodes} workloads={workloads} isHealthy={isHealthy} sysStats={sysStats} searchQuery={searchQuery} chartData={chartData} />} />
           <Route path="/nodes" element={<NodesPage nodes={nodes} refresh={fetchData} role={role} searchQuery={searchQuery} addNotification={addNotification} />} />
           <Route path="/workloads" element={<WorkloadsPage workloads={workloads} refresh={fetchData} role={role} searchQuery={searchQuery} addNotification={addNotification} />} />
           <Route path="/security" element={<SecurityPage />} />
@@ -296,7 +323,7 @@ function App() {
   );
 }
 
-const Overview = ({ nodes, workloads, isHealthy, sysStats, searchQuery }: any) => {
+const Overview = ({ nodes, workloads, isHealthy, sysStats, searchQuery, chartData }: any) => {
   const realCpuPercent = sysStats ? Math.min((sysStats.goroutines * 2.5), 100).toFixed(1) : "0.0";
   const realMemPercent = sysStats ? Math.min(((sysStats.allocated_mb / 1024) * 100), 100).toFixed(1) : "0.0";
 
@@ -331,12 +358,7 @@ const Overview = ({ nodes, workloads, isHealthy, sysStats, searchQuery }: any) =
         </div>
         <div style={{ height: '250px', width: '100%' }}>
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={[
-              { time: '10:00', cpu: 25, mem: 40 }, { time: '10:05', cpu: 35, mem: 45 },
-              { time: '10:10', cpu: 45, mem: 55 }, { time: '10:15', cpu: 30, mem: 50 },
-              { time: '10:20', cpu: 50, mem: 60 }, { time: '10:25', cpu: 40, mem: 55 },
-              { time: '10:30', cpu: 35, mem: 48 }
-            ]}>
+            <AreaChart data={chartData}>
               <defs>
                 <linearGradient id="colorCpu" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor={C.primary} stopOpacity={0.8}/><stop offset="95%" stopColor={C.primary} stopOpacity={0}/></linearGradient>
                 <linearGradient id="colorMem" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor={C.success} stopOpacity={0.8}/><stop offset="95%" stopColor={C.success} stopOpacity={0}/></linearGradient>
