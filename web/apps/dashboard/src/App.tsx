@@ -104,7 +104,8 @@ function App() {
           
           <div style={{ padding: '10px', flex: 1 }}>
             <p style={{ fontSize: '11px', color: C.muted, fontWeight: '600', marginBottom: '12px', paddingLeft: '12px' }}>PLATFORM</p>
-            {[{ path: '/', label: 'Overview', icon: <LayoutDashboard size={18} /> }, { path: '/nodes', label: 'Clusters', icon: <Server size={18} /> }, { path: '/workloads', label: 'Workloads', icon: <Box size={18} /> }, { path: '/security', label: 'Security', icon: <Shield size={18} /> }].map(item => (
+            {[{ path: '/', label: 'Overview', icon: <LayoutDashboard size={18} /> }, { path: '/nodes', label: 'Clusters', icon: <Server size={18} /> }, { path: '/workloads', label: 'Workloads', icon: <Box size={18} /> },
+    { path: '/deployments', label: 'Deployments', icon: <Rocket size={18} /> }, { path: '/security', label: 'Security', icon: <Shield size={18} /> }].map(item => (
               <Link key={item.path} to={item.path} style={{ textDecoration: 'none' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 12px', borderRadius: '6px', marginBottom: '2px', color: C.muted }}>{item.icon} <span style={{ fontSize: '14px' }}>{item.label}</span></div>
               </Link>
@@ -158,6 +159,7 @@ function App() {
               <Route path="/" element={<Overview nodes={nodes} workloads={workloads} isHealthy={isHealthy} isLoading={isLoading} sysStats={sysStats} chartData={chartData} />} />
               <Route path="/nodes" element={<NodesPage nodes={nodes} refresh={fetchData} role={role} isLoading={isLoading} />} />
               <Route path="/workloads" element={<WorkloadsPage workloads={workloads} refresh={fetchData} role={role} isLoading={isLoading} />} />
+              <Route path="/deployments" element={<DeploymentsPage />} />
               <Route path="/security" element={<SecurityPage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="*" element={<Navigate to="/" />} />
@@ -367,9 +369,224 @@ const WorkloadsPage = ({ workloads, refresh, role, isLoading }: any) => {
   );
 };
 
-const SecurityPage = () => <div style={{ color: 'white', padding: '20px' }}>Security - Coming Soon</div>;
-const SettingsPage = () => <div style={{ color: 'white', padding: '20px' }}>Settings - Coming Soon</div>;
-const DocsPage = () => <div style={{ color: 'white', padding: '20px' }}>Documentation - Coming Soon</div>;
-const SupportPage = () => <div style={{ color: 'white', padding: '20px' }}>Support - Coming Soon</div>;
+
+
+
+
+const DeploymentsPage = () => {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: C.muted, marginBottom: '4px' }}>
+            <span>Deployments</span><span>/</span><span>nexus-api</span><span>/</span><span style={{ color: C.text }}>Release #v2.8.4</span>
+          </div>
+          <h1 style={{ margin: 0, fontSize: '24px', fontWeight: '600' }}>Deployment & Release Pipeline</h1>
+          <p style={{ margin: '4px 0 0 0', color: C.muted, fontSize: '14px' }}>Build, test and deploy your application across environments.</p>
+        </div>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button style={{ ...btnStyle, background: 'transparent', border: `1px solid ${C.border}`, color: C.text }}>Re-run Pipeline</button>
+          <button style={{ ...btnStyle, background: 'transparent', border: `1px solid ${C.border}`, color: C.text }}>Rollback</button>
+          <button style={btnStyle}><Plus size={16}/> Create Release</button>
+        </div>
+      </div>
+
+      {/* Repo Info */}
+      <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', fontWeight: 'bold' }}>N</div>
+          <div>
+            <h3 style={{ margin: 0, fontSize: '15px', fontWeight: '600' }}>nexus-platform / nexus-api</h3>
+            <div style={{ display: 'flex', gap: '12px', marginTop: '4px', fontSize: '12px', color: C.muted }}>
+              <span style={{ fontFamily: 'monospace' }}>main</span><span style={{ fontFamily: 'monospace' }}>v2.8.4</span><span style={{ fontFamily: 'monospace' }}>c9f3a7e</span>
+            </div>
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: '32px', fontSize: '12px' }}>
+          <div><p style={{ margin: 0, color: C.muted }}>Author</p><p style={{ margin: '2px 0 0 0', fontSize: '13px', fontWeight: '500' }}>Aman Verma</p></div>
+          <div><p style={{ margin: 0, color: C.muted }}>Committed</p><p style={{ margin: '2px 0 0 0', fontSize: '13px', fontWeight: '500' }}>2h ago</p></div>
+          <div><p style={{ margin: 0, color: C.muted }}>Pipeline</p><p style={{ margin: '2px 0 0 0', fontSize: '13px', fontWeight: '500', fontFamily: 'monospace' }}>#89231</p></div>
+          <div><p style={{ margin: 0, color: C.muted }}>Status</p><p style={{ margin: '2px 0 0 0', fontSize: '13px', fontWeight: '600', color: C.warning }}>● Deploying</p></div>
+        </div>
+      </div>
+
+      {/* Pipeline Steps */}
+      <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+        {[
+          { name: 'Code Checkout', status: 'success', time: '12s' },
+          { name: 'Build', status: 'success', time: '1m 28s' },
+          { name: 'Test', status: 'success', time: '2m 11s' },
+          { name: 'Package', status: 'success', time: '36s' },
+          { name: 'Deploy (Staging)', status: 'success', time: '1m 44s' },
+          { name: 'Deploy (Production)', status: 'running', time: '2m 13s' },
+        ].map((step, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', flex: 1 }}>
+              <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: step.status === 'success' ? 'rgba(34,197,94,0.15)' : 'rgba(99,102,241,0.15)', border: `2px solid ${step.status === 'success' ? C.success : C.primary}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: step.status === 'success' ? C.success : C.primary }}>
+                {step.status === 'success' ? <CheckCircle2 size={18} /> : <Activity size={18} />}
+              </div>
+              <span style={{ fontSize: '12px', fontWeight: '500', textAlign: 'center' }}>{step.name}</span>
+              <span style={{ fontSize: '11px', color: C.muted }}>{step.time}</span>
+            </div>
+            {i < 5 && <div style={{ height: '2px', backgroundColor: step.status === 'success' ? C.success : C.border, flex: 1, marginBottom: '32px' }}></div>}
+          </div>
+        ))}
+      </div>
+
+      {/* Logs + Right Panel */}
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
+        <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px' }}>
+          <div style={{ display: 'flex', borderBottom: `1px solid ${C.border}`, padding: '0 20px' }}>
+            {['Pipeline Logs', 'Artifacts', 'Environments', 'Metadata'].map((tab, i) => (
+              <div key={tab} style={{ padding: '16px 0', marginRight: '24px', fontSize: '14px', fontWeight: '500', color: i === 0 ? C.text : C.muted, borderBottom: i === 0 ? `2px solid ${C.primary}` : '2px solid transparent', cursor: 'pointer' }}>{tab}</div>
+            ))}
+          </div>
+          <div style={{ padding: '20px', height: '320px', overflowY: 'auto', fontFamily: 'monospace', fontSize: '12px', lineHeight: '1.8', backgroundColor: C.bg, borderBottomLeftRadius: '8px', borderBottomRightRadius: '8px' }}>
+            {[
+              { t: '10:31:42', l: 'INFO', m: 'Starting production deployment...' },
+              { t: '10:31:43', l: 'INFO', m: 'Pulling container image: nexus-api:v2.8.4' },
+              { t: '10:31:47', l: 'INFO', m: 'Image pull successful (412 MB)' },
+              { t: '10:31:52', l: 'INFO', m: 'Performing rolling update (maxUnavailable=25%)' },
+              { t: '10:32:08', l: 'INFO', m: '2/4 pods ready' },
+              { t: '10:32:20', l: 'SUCCESS', m: 'Deployment progressing successfully...' },
+            ].map((log, i) => (
+              <div key={i} style={{ display: 'flex', gap: '12px' }}><span style={{ color: C.muted }}>{log.t}</span><span style={{ color: log.l === 'SUCCESS' ? C.success : C.primary, minWidth: '50px' }}>{log.l}</span><span>{log.m}</span></div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '20px' }}>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: '15px', fontWeight: '600' }}>Release v2.8.4</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '13px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: C.muted }}>Commit</span><span style={{ fontFamily: 'monospace' }}>c9f3a7e</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: C.muted }}>Branch</span><span>main</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: C.muted }}>Changes</span><span style={{ color: C.success }}>+24 -6</span></div>
+            </div>
+          </div>
+          <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '20px' }}>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: '15px', fontWeight: '600' }}>Environments</h3>
+            {[
+              { name: 'Development', v: 'v2.8.3', s: C.success },
+              { name: 'Staging', v: 'v2.8.4', s: C.success },
+              { name: 'Production', v: 'v2.8.4', s: C.warning },
+            ].map((env, i) => (
+              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: i < 2 ? `1px solid ${C.border}` : 'none', fontSize: '13px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: env.s }}></div>{env.name}</div>
+                <span style={{ color: C.muted, fontFamily: 'monospace', fontSize: '12px' }}>{env.v}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '20px' }}>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: '15px', fontWeight: '600' }}>Deployment Health</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '13px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: C.muted }}>Pods</span><span style={{ color: C.success, fontWeight: '600' }}>4 / 4</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: C.muted }}>CPU</span><span>38%</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: C.muted }}>Memory</span><span>56%</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: C.muted }}>Uptime</span><span style={{ color: C.success }}>99.98%</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* History */}
+      <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px' }}>
+        <div style={{ padding: '16px 20px', borderBottom: `1px solid ${C.border}` }}><h2 style={{ margin: 0, fontSize: '16px', fontWeight: '600' }}>Deployment History</h2></div>
+        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
+          <thead><tr style={{ borderBottom: `1px solid ${C.border}`, color: C.muted }}>
+            <th style={{ padding: '12px 20px', fontWeight: '500' }}>Release</th><th style={{ padding: '12px 20px', fontWeight: '500' }}>Environment</th><th style={{ padding: '12px 20px', fontWeight: '500' }}>Status</th><th style={{ padding: '12px 20px', fontWeight: '500' }}>Deployed At</th><th style={{ padding: '12px 20px', fontWeight: '500' }}>Duration</th>
+          </tr></thead>
+          <tbody>
+            {[
+              { r: 'v2.8.4', e: 'Production', s: 'Deploying', d: 'Jun 20, 2025', dur: '—' },
+              { r: 'v2.8.3', e: 'Production', s: 'Succeeded', d: 'Jun 18, 2025', dur: '7m 18s' },
+              { r: 'v2.8.2', e: 'Production', s: 'Succeeded', d: 'Jun 15, 2025', dur: '6m 47s' },
+            ].map((row, i) => (
+              <tr key={i} style={{ borderBottom: `1px solid ${C.border}` }}>
+                <td style={{ padding: '12px 20px', fontWeight: '500' }}>{row.r}</td>
+                <td style={{ padding: '12px 20px' }}>{row.e}</td>
+                <td style={{ padding: '12px 20px' }}><span style={{ color: row.s === 'Succeeded' ? C.success : C.warning, backgroundColor: row.s === 'Succeeded' ? 'rgba(34,197,94,0.1)' : 'rgba(245,158,11,0.1)', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '600' }}>{row.s}</span></td>
+                <td style={{ padding: '12px 20px', color: C.muted }}>{row.d}</td>
+                <td style={{ padding: '12px 20px', color: C.muted }}>{row.dur}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+
+const SecurityPage = () => (
+  <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+    <h1 style={{ margin: 0, fontSize: '24px', fontWeight: '600' }}>Security Operations</h1>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+      {[{ l: 'Active Threats', v: '7', c: C.danger }, { l: 'Incidents', v: '18', c: C.warning }, { l: 'Blocked Access', v: '142', c: C.primary }, { l: 'Security Posture', v: '96.8%', c: C.success }].map((s, i) => (
+        <div key={i} style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '20px' }}><p style={{ margin: '0 0 8px 0', color: C.muted, fontSize: '13px' }}>{s.l}</p><h2 style={{ margin: 0, fontSize: '28px', color: s.c }}>{s.v}</h2></div>
+      ))}
+    </div>
+    <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '20px' }}>
+      <h2 style={{ margin: '0 0 16px 0', fontSize: '16px' }}>Audit Event Stream</h2>
+      {[{ t: '20:15', e: 'Role updated', a: 'admin@nexus.io', s: 'Success' }, { t: '20:12', e: 'Policy modified', a: 'secops@nexus.io', s: 'Success' }, { t: '20:07', e: 'Access denied', a: 'user@ext.com', s: 'Blocked' }].map((row, i) => (
+        <div key={i} style={{ display: 'flex', gap: '16px', padding: '12px 0', borderBottom: i < 2 ? `1px solid ${C.border}` : 'none', fontSize: '13px' }}>
+          <span style={{ color: C.muted, width: '60px' }}>{row.t}</span><span style={{ flex: 1 }}>{row.e}</span><span style={{ color: C.muted, width: '150px' }}>{row.a}</span><span style={{ color: row.s === 'Success' ? C.success : C.danger }}>{row.s}</span>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+
+const SettingsPage = () => {
+  const [activeTab, setActiveTab] = useState('Profile');
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <h1 style={{ margin: 0, fontSize: '24px', fontWeight: '600' }}>Settings</h1>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 3fr', gap: '24px' }}>
+        <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '12px', height: 'fit-content' }}>
+          {['Profile', 'API Keys', 'Preferences', 'Billing', 'Team'].map((item) => (
+            <div key={item} onClick={() => setActiveTab(item)} style={{ padding: '10px 12px', fontSize: '14px', cursor: 'pointer', backgroundColor: activeTab === item ? C.bg : 'transparent', color: activeTab === item ? C.text : C.muted, borderRadius: '6px', marginBottom: '4px' }}>{item}</div>
+          ))}
+        </div>
+        <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '24px' }}>
+          {activeTab === 'Profile' && (
+            <><h2 style={{ margin: '0 0 24px 0', fontSize: '18px' }}>Profile Information</h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}><div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: '#4f46e5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>A</div><div><h3 style={{ margin: 0, fontSize: '16px' }}>Admin User</h3><p style={{ margin: '4px 0 0 0', color: C.muted, fontSize: '13px' }}>Platform Administrator</p></div></div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}><div><label style={{ display: 'block', fontSize: '13px', color: C.muted, marginBottom: '8px' }}>Full Name</label><input style={inputStyle} defaultValue="Admin User" /></div><div><label style={{ display: 'block', fontSize: '13px', color: C.muted, marginBottom: '8px' }}>Email</label><input style={inputStyle} defaultValue="admin@nexus.io" /></div></div>
+            <button style={btnStyle}>Save Changes</button></>
+          )}
+          {activeTab !== 'Profile' && <p style={{ color: C.muted }}>{activeTab} settings coming soon.</p>}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
+const DocsPage = () => (
+  <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+    <h1 style={{ margin: 0, fontSize: '24px', fontWeight: '600' }}>Documentation</h1>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+      {[{ t: 'Getting Started', d: 'Setup your first cluster' }, { t: 'Node Management', d: 'Add and monitor nodes' }, { t: 'Deploy Workloads', d: 'Run Docker containers' }].map((c, i) => (
+        <div key={i} style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '24px', cursor: 'pointer' }}><h3 style={{ margin: '0 0 8px 0', fontSize: '16px' }}>{c.t}</h3><p style={{ margin: 0, color: C.muted, fontSize: '13px' }}>{c.d}</p></div>
+      ))}
+    </div>
+  </div>
+);
+
+
+const SupportPage = () => (
+  <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+    <h1 style={{ margin: 0, fontSize: '24px', fontWeight: '600' }}>Support Center</h1>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+      <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '24px' }}><h3 style={{ margin: '0 0 8px 0', fontSize: '16px' }}>Live Chat</h3><p style={{ margin: 0, color: C.muted, fontSize: '13px' }}>Average response: 2 minutes</p></div>
+      <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '24px' }}><h3 style={{ margin: '0 0 8px 0', fontSize: '16px' }}>Email Support</h3><p style={{ margin: 0, color: C.muted, fontSize: '13px' }}>support@nexus.io</p></div>
+    </div>
+  </div>
+);
+
 
 export default App;
