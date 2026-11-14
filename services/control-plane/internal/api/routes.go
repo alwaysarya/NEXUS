@@ -4,7 +4,7 @@ import (
 	"net/http"
 )
 
-func RegisterRoutes(mux *http.ServeMux, h *Handlers, w *WorkloadHandler, auth *AuthHandler, health *HealthHandler, metrics *MetricsHandler, agent *AgentHandler) {
+func RegisterRoutes(mux *http.ServeMux, h *Handlers, w *WorkloadHandler, auth *AuthHandler, health *HealthHandler, metrics *MetricsHandler, agent *AgentHandler, system *SystemHandler) {
 	// Public Routes
 	mux.HandleFunc("POST /api/v1/register", auth.Register)
 	mux.HandleFunc("POST /api/v1/login", auth.Login)
@@ -24,6 +24,7 @@ func RegisterRoutes(mux *http.ServeMux, h *Handlers, w *WorkloadHandler, auth *A
 	mux.HandleFunc("GET /api/v1/workloads", AuthMiddleware(w.ListWorkloads))
 	mux.HandleFunc("POST /api/v1/workloads/{id}/schedule", AuthMiddleware(AdminOnly(w.ScheduleWorkload)))
 
-	// Agent Token Route (Admin Only)
+	// System Stats & Agent Tokens
+	mux.HandleFunc("GET /api/v1/system/stats", AuthMiddleware(system.GetSystemStats))
 	mux.HandleFunc("POST /api/v1/agent/token", AuthMiddleware(AdminOnly(agent.GenerateAgentToken)))
 }

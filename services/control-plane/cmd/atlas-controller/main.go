@@ -36,9 +36,10 @@ func main() {
 	healthHandler := api.NewHealthHandler(db)
 	metricsHandler := api.NewMetricsHandler()
 	agentHandler := api.NewAgentHandler()
+	systemHandler := api.NewSystemHandler()
 
 	mux := http.NewServeMux()
-	api.RegisterRoutes(mux, nodeHandlers, workloadHandlers, authHandler, healthHandler, metricsHandler, agentHandler)
+	api.RegisterRoutes(mux, nodeHandlers, workloadHandlers, authHandler, healthHandler, metricsHandler, agentHandler, systemHandler)
 
 	port := ":8080"
 	fmt.Printf("Atlas Control Plane running on %s\n", port)
