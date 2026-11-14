@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { LayoutDashboard, Server, Box, LogOut, Shield, Bell, User, Settings, Activity, Search, ChevronRight, Cpu, Database, Play, Plus, Trash2, ShieldAlert, Globe, HardDrive, Terminal, HelpCircle, MoreHorizontal, ChevronDown, CheckCircle2, AlertCircle, XCircle, Network, X, Layers, ArrowRight, Key } from 'lucide-react';
+import { LayoutDashboard, Server, Box, LogOut, Shield, Bell, User, Settings, Activity, Search, ChevronRight, Cpu, Database, Play, Plus, Trash2, ShieldAlert, Globe, HardDrive, Terminal, HelpCircle, MoreHorizontal, ChevronDown, CheckCircle2, AlertCircle, XCircle, Network, X, Layers, ArrowRight, Key, Book, MessageSquare, LifeBuoy, FileText, Zap } from 'lucide-react';
 
 const C = { bg: '#09090b', sidebar: '#0f0f13', card: '#121216', cardHover: '#1a1a20', border: '#27272a', primary: '#6366f1', success: '#22c55e', warning: '#eab308', danger: '#ef4444', text: '#f4f4f5', muted: '#a1a1aa' };
 const inputStyle = { width: '100%', padding: '10px 14px', borderRadius: '6px', border: `1px solid ${C.border}`, backgroundColor: C.bg, color: C.text, marginBottom: '16px', outline: 'none', fontSize: '14px' };
@@ -34,7 +34,12 @@ const DashboardLayout = ({ children, role, handleLogout, isHealthy, searchQuery,
     { path: '/nodes', label: 'Clusters', icon: <Server size={18} /> },
     { path: '/workloads', label: 'Workloads', icon: <Box size={18} /> },
     { path: '/security', label: 'Security', icon: <Shield size={18} /> },
+  ];
+
+  const bottomNavItems = [
     { path: '/settings', label: 'Settings', icon: <Settings size={18} /> },
+    { path: '#docs', label: 'Documentation', icon: <Book size={18} /> },
+    { path: '#support', label: 'Support', icon: <LifeBuoy size={18} /> },
   ];
 
   return (
@@ -44,8 +49,9 @@ const DashboardLayout = ({ children, role, handleLogout, isHealthy, searchQuery,
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px', background: 'white', borderRadius: '6px' }}><span style={{ color: 'black', fontWeight: 'bold', fontSize: '18px' }}>N</span></div>
           <span style={{ fontSize: '18px', fontWeight: '600', letterSpacing: '0.5px' }}>NEXUS</span>
         </div>
-        <div style={{ padding: '10px', flex: 1, marginTop: '10px' }}>
-          <p style={{ fontSize: '11px', color: C.muted, fontWeight: '600', marginBottom: '12px', paddingLeft: '12px' }}>PLATFORM</p>
+        
+        <div style={{ padding: '10px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <p style={{ fontSize: '11px', color: C.muted, fontWeight: '600', marginBottom: '12px', paddingLeft: '12px', marginTop: '10px' }}>PLATFORM</p>
           {navItems.map((item) => {
             const isActive = location.pathname === item.path;
             return (
@@ -56,7 +62,20 @@ const DashboardLayout = ({ children, role, handleLogout, isHealthy, searchQuery,
               </Link>
             );
           })}
+
+          <p style={{ fontSize: '11px', color: C.muted, fontWeight: '600', marginBottom: '12px', paddingLeft: '12px', marginTop: '24px' }}>RESOURCES</p>
+          {bottomNavItems.map((item) => {
+            const isActive = location.pathname === item.path;
+            return (
+              <Link key={item.path} to={item.path} style={{ textDecoration: 'none' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 12px', borderRadius: '6px', marginBottom: '2px', backgroundColor: isActive ? '#27272a' : 'transparent', color: isActive ? C.text : C.muted, transition: 'all 0.1s' }}>
+                  {item.icon} <span style={{ fontSize: '14px', fontWeight: isActive ? '500' : '400' }}>{item.label}</span>
+                </div>
+              </Link>
+            );
+          })}
         </div>
+
         <div style={{ padding: '20px', borderTop: `1px solid ${C.border}` }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', color: C.muted, fontSize: '12px' }}>
             <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: isHealthy ? C.success : C.danger }}></div> {isHealthy ? 'All Systems Operational' : 'Backend Offline'}
@@ -64,7 +83,7 @@ const DashboardLayout = ({ children, role, handleLogout, isHealthy, searchQuery,
           <button onClick={handleLogout} style={{ ...btnStyle, width: '100%', background: 'transparent', border: `1px solid ${C.border}`, color: C.muted }}><LogOut size={16} /> Sign Out</button>
         </div>
       </div>
-
+      
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <div style={{ height: '64px', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', backgroundColor: C.bg }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -114,7 +133,6 @@ const DashboardLayout = ({ children, role, handleLogout, isHealthy, searchQuery,
               {showProfileMenu && (
                 <div style={{ position: 'absolute', right: 0, top: '40px', width: '180px', backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '6px', zIndex: 10, boxShadow: '0 4px 12px rgba(0,0,0,0.5)' }}>
                   <Link to="/settings" style={{ textDecoration: 'none' }}><div style={{ padding: '8px 12px', fontSize: '13px', cursor: 'pointer', borderRadius: '4px', color: C.text }} onMouseOver={e => e.currentTarget.style.backgroundColor = C.sidebar} onMouseOut={e => e.currentTarget.style.backgroundColor = 'transparent'}>Account Settings</div></Link>
-                  <div style={{ padding: '8px 12px', fontSize: '13px', cursor: 'pointer', borderRadius: '4px', color: C.text }} onMouseOver={e => e.currentTarget.style.backgroundColor = C.sidebar} onMouseOut={e => e.currentTarget.style.backgroundColor = 'transparent'}>API Keys</div>
                   <div onClick={handleLogout} style={{ padding: '8px 12px', fontSize: '13px', cursor: 'pointer', borderRadius: '4px', color: C.danger }} onMouseOver={e => e.currentTarget.style.backgroundColor = 'rgba(239,68,68,0.1)'} onMouseOut={e => e.currentTarget.style.backgroundColor = 'transparent'}>Sign Out</div>
                 </div>
               )}
@@ -520,7 +538,6 @@ const SettingsPage = () => {
           {activeTab === 'Profile' && (
             <>
               <h2 style={{ margin: '0 0 24px 0', fontSize: '18px', fontWeight: '600' }}>Profile Information</h2>
-              
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
                 <div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: '#4f46e5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', fontWeight: 'bold' }}>A</div>
                 <div>
@@ -529,23 +546,14 @@ const SettingsPage = () => {
                 </div>
                 <button style={{ ...btnStyle, marginLeft: 'auto', background: 'transparent', border: `1px solid ${C.border}`, color: C.text }}>Change Avatar</button>
               </div>
-
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '13px', color: C.muted, marginBottom: '8px' }}>Full Name</label>
-                  <input style={inputStyle} defaultValue="Admin User" />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '13px', color: C.muted, marginBottom: '8px' }}>Email Address</label>
-                  <input style={inputStyle} defaultValue="admin@nexus.io" />
-                </div>
+                <div><label style={{ display: 'block', fontSize: '13px', color: C.muted, marginBottom: '8px' }}>Full Name</label><input style={inputStyle} defaultValue="Admin User" /></div>
+                <div><label style={{ display: 'block', fontSize: '13px', color: C.muted, marginBottom: '8px' }}>Email Address</label><input style={inputStyle} defaultValue="admin@nexus.io" /></div>
               </div>
-
               <div style={{ marginBottom: '24px' }}>
                 <label style={{ display: 'block', fontSize: '13px', color: C.muted, marginBottom: '8px' }}>Role</label>
                 <input style={{ ...inputStyle, backgroundColor: C.sidebar }} defaultValue="Platform Admin (Superuser)" disabled />
               </div>
-
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', borderTop: `1px solid ${C.border}`, paddingTop: '24px' }}>
                 <button style={{ ...btnStyle, background: 'transparent', border: `1px solid ${C.border}`, color: C.muted }}>Cancel</button>
                 <button style={btnStyle}>Save Changes</button>
@@ -557,7 +565,6 @@ const SettingsPage = () => {
             <>
               <h2 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: '600' }}>API Keys</h2>
               <p style={{ margin: '0 0 24px 0', color: C.muted, fontSize: '13px' }}>Manage your API keys for programmatic access to NEXUS.</p>
-
               <div style={{ border: `1px solid ${C.border}`, borderRadius: '8px', padding: '20px', marginBottom: '24px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                   <h3 style={{ margin: 0, fontSize: '15px', fontWeight: '500' }}>Node Agent Key</h3>
@@ -572,7 +579,6 @@ const SettingsPage = () => {
                   <p style={{ margin: 0, fontSize: '13px', color: C.muted }}>No API keys generated yet.</p>
                 )}
               </div>
-
               <div style={{ backgroundColor: 'rgba(245,158,11,0.1)', border: `1px solid rgba(245,158,11,0.2)`, borderRadius: '8px', padding: '16px', display: 'flex', gap: '12px' }}>
                 <AlertCircle size={20} color={C.warning} style={{ flexShrink: 0 }}/>
                 <div>
@@ -589,21 +595,15 @@ const SettingsPage = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div><h4 style={{ margin: '0 0 4px 0', fontSize: '14px', fontWeight: '500' }}>Email Notifications</h4><p style={{ margin: 0, fontSize: '12px', color: C.muted }}>Receive updates about your cluster.</p></div>
-                  <div style={{ width: '44px', height: '24px', backgroundColor: C.success, borderRadius: '12px', position: 'relative', cursor: 'pointer' }}>
-                    <div style={{ width: '20px', height: '20px', backgroundColor: 'white', borderRadius: '50%', position: 'absolute', top: '2px', right: '2px', transition: 'all 0.3s' }}></div>
-                  </div>
+                  <div style={{ width: '44px', height: '24px', backgroundColor: C.success, borderRadius: '12px', position: 'relative', cursor: 'pointer' }}><div style={{ width: '20px', height: '20px', backgroundColor: 'white', borderRadius: '50%', position: 'absolute', top: '2px', right: '2px' }}></div></div>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div><h4 style={{ margin: '0 0 4px 0', fontSize: '14px', fontWeight: '500' }}>Auto-refresh Dashboard</h4><p style={{ margin: 0, fontSize: '12px', color: C.muted }}>Refresh data every 5 seconds.</p></div>
-                  <div style={{ width: '44px', height: '24px', backgroundColor: C.success, borderRadius: '12px', position: 'relative', cursor: 'pointer' }}>
-                    <div style={{ width: '20px', height: '20px', backgroundColor: 'white', borderRadius: '50%', position: 'absolute', top: '2px', right: '2px', transition: 'all 0.3s' }}></div>
-                  </div>
+                  <div style={{ width: '44px', height: '24px', backgroundColor: C.success, borderRadius: '12px', position: 'relative', cursor: 'pointer' }}><div style={{ width: '20px', height: '20px', backgroundColor: 'white', borderRadius: '50%', position: 'absolute', top: '2px', right: '2px' }}></div></div>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div><h4 style={{ margin: '0 0 4px 0', fontSize: '14px', fontWeight: '500' }}>Dark Mode</h4><p style={{ margin: 0, fontSize: '12px', color: C.muted }}>Use dark theme across the dashboard.</p></div>
-                  <div style={{ width: '44px', height: '24px', backgroundColor: C.primary, borderRadius: '12px', position: 'relative', cursor: 'pointer' }}>
-                    <div style={{ width: '20px', height: '20px', backgroundColor: 'white', borderRadius: '50%', position: 'absolute', top: '2px', right: '2px', transition: 'all 0.3s' }}></div>
-                  </div>
+                  <div style={{ width: '44px', height: '24px', backgroundColor: C.primary, borderRadius: '12px', position: 'relative', cursor: 'pointer' }}><div style={{ width: '20px', height: '20px', backgroundColor: 'white', borderRadius: '50%', position: 'absolute', top: '2px', right: '2px' }}></div></div>
                 </div>
               </div>
             </>
@@ -615,7 +615,6 @@ const SettingsPage = () => {
               <p style={{ margin: 0, color: C.muted, fontSize: '13px' }}>This feature is coming soon.</p>
             </div>
           )}
-
         </div>
       </div>
     </div>
