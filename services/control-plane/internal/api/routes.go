@@ -4,15 +4,13 @@ import (
 	"net/http"
 )
 
-func RegisterRoutes(mux *http.ServeMux, h *Handlers, w *WorkloadHandler, auth *AuthHandler, health *HealthHandler, metrics *MetricsHandler, agent *AgentHandler, system *SystemHandler) {
-	// Public Routes
+func RegisterRoutes(mux *http.ServeMux, h *Handlers, w *WorkloadHandler, auth *AuthHandler, health *HealthHandler, metrics *MetricsHandler, agent *AgentHandler, system *SystemHandler, apikey *APIKeyHandler) {
 	mux.HandleFunc("POST /api/v1/register", auth.Register)
 	mux.HandleFunc("POST /api/v1/login", auth.Login)
 	mux.HandleFunc("GET /health/live", health.Live)
 	mux.HandleFunc("GET /health/ready", health.Ready)
 	mux.HandleFunc("GET /metrics", metrics.ServeMetrics)
 
-	// Protected Routes
 	mux.HandleFunc("POST /api/v1/nodes", AuthMiddleware(AdminOnly(h.RegisterNode)))
 	mux.HandleFunc("GET /api/v1/nodes", AuthMiddleware(h.ListNodes))
 	mux.HandleFunc("GET /api/v1/nodes/{id}", AuthMiddleware(h.GetNode))
@@ -24,7 +22,8 @@ func RegisterRoutes(mux *http.ServeMux, h *Handlers, w *WorkloadHandler, auth *A
 	mux.HandleFunc("GET /api/v1/workloads", AuthMiddleware(w.ListWorkloads))
 	mux.HandleFunc("POST /api/v1/workloads/{id}/schedule", AuthMiddleware(AdminOnly(w.ScheduleWorkload)))
 
-	// System Stats & Agent Tokens
 	mux.HandleFunc("GET /api/v1/system/stats", AuthMiddleware(system.GetSystemStats))
 	mux.HandleFunc("POST /api/v1/agent/token", AuthMiddleware(AdminOnly(agent.GenerateAgentToken)))
+
+	mux.HandleFunc("POST /api/v1/api-keys", AuthMiddleware(AdminOnly(apikey.GenerateKey)))
 }
