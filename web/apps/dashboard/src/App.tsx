@@ -82,8 +82,8 @@ const DashboardLayout = ({ children, role, handleLogout, isHealthy, searchQuery,
 
   const bottomNavItems = [
     { path: '/settings', label: 'Settings', icon: <Settings size={18} /> },
-    { path: '#docs', label: 'Documentation', icon: <Book size={18} /> },
-    { path: '#support', label: 'Support', icon: <LifeBuoy size={18} /> },
+    { path: '/docs', label: 'Documentation', icon: <Book size={18} /> },
+    { path: '/support', label: 'Support', icon: <LifeBuoy size={18} /> },
   ];
 
   return (
@@ -287,6 +287,8 @@ function App() {
           <Route path="/security" element={<SecurityPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/profile" element={<UserProfilePage nodes={nodes} workloads={workloads} />} />
+          <Route path="/docs" element={<DocsPage />} />
+          <Route path="/support" element={<SupportPage />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </DashboardLayout>
@@ -919,4 +921,83 @@ const SettingsPage = () => {
   );
 };
 
+
+const DocsPage = () => (
+  <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+    <h1 style={{ margin: '0 0 8px 0', fontSize: '28px', fontWeight: '700' }}>Documentation</h1>
+    <p style={{ margin: '0 0 32px 0', color: C.muted, fontSize: '14px' }}>Learn how to use NEXUS to orchestrate your infrastructure.</p>
+
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px', marginBottom: '32px' }}>
+      {[
+        { icon: <Zap size={24} color={C.primary} />, title: 'Getting Started', desc: 'Set up your first cluster in 5 minutes.' },
+        { icon: <Server size={24} color={C.success} />, title: 'Node Management', desc: 'Add, monitor, and scale compute nodes.' },
+        { icon: <Box size={24} color={C.warning} />, title: 'Deploying Workloads', desc: 'Deploy and schedule Docker containers.' },
+        { icon: <Shield size={24} color={C.danger} />, title: 'Security & Access', desc: 'Manage API keys and RBAC policies.' },
+        { icon: <Activity size={24} color={C.primary} />, title: 'Observability', desc: 'Monitor metrics, logs, and traces.' },
+        { icon: <Terminal size={24} color={C.muted} />, title: 'API Reference', desc: 'Full REST API documentation.' },
+      ].map((card, i) => (
+        <div key={i} style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '24px', cursor: 'pointer', transition: 'border 0.2s' }} onMouseOver={e => e.currentTarget.style.borderColor = C.primary} onMouseOut={e => e.currentTarget.style.borderColor = C.border}>
+          <div style={{ marginBottom: '16px' }}>{card.icon}</div>
+          <h3 style={{ margin: '0 0 8px 0', fontSize: '16px', fontWeight: '600' }}>{card.title}</h3>
+          <p style={{ margin: 0, fontSize: '13px', color: C.muted }}>{card.desc}</p>
+        </div>
+      ))}
+    </div>
+
+    <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '32px' }}>
+      <h2 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: '600' }}>Quick Start Guide</h2>
+      <div style={{ backgroundColor: C.bg, border: `1px solid ${C.border}`, borderRadius: '6px', padding: '20px', fontFamily: 'monospace', fontSize: '13px', lineHeight: '1.8', color: C.text }}>
+        <div style={{ color: C.muted, marginBottom: '8px' }}># 1. Generate an API Key from Settings</div>
+        <div style={{ color: C.muted, marginBottom: '8px' }}># 2. Connect a Node Agent</div>
+        <div><span style={{ color: C.success }}>export</span> NEXUS_API_KEY=<span style={{ color: C.warning }}>"nexus_sk_..."</span></div>
+        <div style={{ marginBottom: '8px' }}><span style={{ color: C.success }}>nexus-agent</span> --control-plane=http://localhost:8080</div>
+        <div style={{ color: C.muted, marginBottom: '8px' }}># 3. Deploy your first workload</div>
+        <div><span style={{ color: C.success }}>curl</span> -X POST http://localhost:8080/api/v1/workloads ...</div>
+      </div>
+    </div>
+  </div>
+);
+
+const SupportPage = () => (
+  <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+    <h1 style={{ margin: '0 0 8px 0', fontSize: '28px', fontWeight: '700' }}>Support Center</h1>
+    <p style={{ margin: '0 0 32px 0', color: C.muted, fontSize: '14px' }}>Get help with NEXUS. We're here for you 24/7.</p>
+
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '32px' }}>
+      <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '24px', display: 'flex', gap: '16px', alignItems: 'center' }}>
+        <div style={{ padding: '16px', backgroundColor: 'rgba(99,102,241,0.1)', borderRadius: '12px' }}><MessageSquare size={28} color={C.primary} /></div>
+        <div>
+          <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', fontWeight: '600' }}>Live Chat</h3>
+          <p style={{ margin: 0, fontSize: '13px', color: C.muted }}>Average response: 2 minutes</p>
+        </div>
+      </div>
+      <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '24px', display: 'flex', gap: '16px', alignItems: 'center' }}>
+        <div style={{ padding: '16px', backgroundColor: 'rgba(34,197,94,0.1)', borderRadius: '12px' }}><FileText size={28} color={C.success} /></div>
+        <div>
+          <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', fontWeight: '600' }}>Email Support</h3>
+          <p style={{ margin: 0, fontSize: '13px', color: C.muted }}>support@nexus.io</p>
+        </div>
+      </div>
+    </div>
+
+    <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '32px' }}>
+      <h2 style={{ margin: '0 0 24px 0', fontSize: '18px', fontWeight: '600' }}>Frequently Asked Questions</h2>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        {[
+          { q: 'How do I add a new compute node?', a: 'Navigate to the Clusters page and click "Add Node". You will need to provide the hostname, IP address, and resource specifications.' },
+          { q: 'What happens if a node goes down?', a: 'NEXUS automatically detects node failures via heartbeat monitoring. Workloads are rescheduled to healthy nodes within 30 seconds.' },
+          { q: 'How is my data secured?', a: 'All communication uses mTLS. Secrets are encrypted at rest with AES-256. API access is protected by JWT authentication and RBAC.' },
+          { q: 'Can I run NEXUS on my own servers?', a: 'Yes! NEXUS is designed to be self-hosted. The control plane and node agents can run on any Linux machine with Docker installed.' },
+        ].map((faq, i) => (
+          <div key={i} style={{ borderBottom: i !== 3 ? `1px solid ${C.border}` : 'none', paddingBottom: '16px' }}>
+            <h4 style={{ margin: '0 0 8px 0', fontSize: '14px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}><HelpCircle size={16} color={C.primary}/> {faq.q}</h4>
+            <p style={{ margin: 0, fontSize: '13px', color: C.muted, paddingLeft: '24px' }}>{faq.a}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+);
+
 export default App;
+
