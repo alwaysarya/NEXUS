@@ -31,22 +31,14 @@ func (h *WorkloadHandler) CreateWorkload(w http.ResponseWriter, r *http.Request)
 		http.Error(w, "invalid request", http.StatusBadRequest)
 		return
 	}
-
 	wl := &node_registry.Workload{
-		ID:             uuid.New(),
-		Name:           req.Name,
-		Image:          req.Image,
-		Status:         node_registry.WorkloadPending,
-		CPURequired:    req.CPURequired,
-		MemoryRequired: req.MemoryRequired,
-		CreatedAt:      time.Now(),
+		ID: uuid.New(), Name: req.Name, Image: req.Image, Status: node_registry.WorkloadPending,
+		CPURequired: req.CPURequired, MemoryRequired: req.MemoryRequired, CreatedAt: time.Now(),
 	}
-
 	if err := h.repo.Create(r.Context(), wl); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(wl)
@@ -54,18 +46,33 @@ func (h *WorkloadHandler) CreateWorkload(w http.ResponseWriter, r *http.Request)
 
 func (h *WorkloadHandler) ScheduleWorkload(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
-	err := h.scheduler.Schedule(r.Context(), idStr)
-	if err != nil {
+	if err := h.scheduler.Schedule(r.Context(), idStr); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"message": "workload scheduled successfully"}`))
 }
 
 func (h *WorkloadHandler) ListWorkloads(w http.ResponseWriter, r *http.Request) {
 	workloads, err := h.repo.List(r.Context())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(workloads)
+}
+
+// NAYA FUNCTION: Agent isko call karega apne tasks lene ke liye
+func (h *WorkloadHandler) GetNodeWorkloads(w http.ResponseWriter, r *http.Request) {
+	nodeIDStr := r.PathValue("id")
+	nodeID, err := uuid.Parse(nodeIDStr)
+	if err != nil {
+		http.Error(w, "invalid node UUID", http.StatusBadRequest)
+		return
+	}
+	workloads, err := h.repo.GetByNodeID(r.Context(), nodeID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

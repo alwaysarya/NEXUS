@@ -31,20 +31,16 @@ func main() {
 		log.Println("Connected to database")
 	}
 
-	// Initialize Repositories
 	nodeRepo := storage.NewPostgresNodeRepository(db)
 	workloadRepo := storage.NewPostgresWorkloadRepository(db)
-
-	// Initialize Scheduler
 	sched := scheduler.NewScheduler(nodeRepo, workloadRepo)
 
-	// Initialize Handlers
 	nodeHandlers := api.NewHandlers(nodeRepo)
 	workloadHandlers := api.NewWorkloadHandler(workloadRepo, sched)
+	authHandler := api.NewAuthHandler()
 
-	// Setup Routes
 	mux := http.NewServeMux()
-	api.RegisterRoutes(mux, nodeHandlers, workloadHandlers)
+	api.RegisterRoutes(mux, nodeHandlers, workloadHandlers, authHandler)
 
 	port := ":8080"
 	fmt.Printf("Atlas Control Plane running on %s\n", port)

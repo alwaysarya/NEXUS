@@ -4,16 +4,19 @@ import (
 	"net/http"
 )
 
-func RegisterRoutes(mux *http.ServeMux, h *Handlers, w *WorkloadHandler) {
-	// Node Routes
-	mux.HandleFunc("POST /api/v1/nodes", h.RegisterNode)
-	mux.HandleFunc("GET /api/v1/nodes", h.ListNodes)
-	mux.HandleFunc("GET /api/v1/nodes/{id}", h.GetNode)
-	mux.HandleFunc("PATCH /api/v1/nodes/{id}/status", h.UpdateNodeStatus)
-	mux.HandleFunc("DELETE /api/v1/nodes/{id}", h.DeleteNode)
+func RegisterRoutes(mux *http.ServeMux, h *Handlers, w *WorkloadHandler, auth *AuthHandler) {
+	// Public Routes
+	mux.HandleFunc("POST /api/v1/login", auth.Login)
 
-	// Workload Routes
-	mux.HandleFunc("POST /api/v1/workloads", w.CreateWorkload)
-	mux.HandleFunc("GET /api/v1/workloads", w.ListWorkloads)
-	mux.HandleFunc("POST /api/v1/workloads/{id}/schedule", w.ScheduleWorkload)
+	// Protected Routes (Needs JWT Token)
+	mux.HandleFunc("POST /api/v1/nodes", AuthMiddleware(h.RegisterNode))
+	mux.HandleFunc("GET /api/v1/nodes", AuthMiddleware(h.ListNodes))
+	mux.HandleFunc("GET /api/v1/nodes/{id}", AuthMiddleware(h.GetNode))
+	mux.HandleFunc("PATCH /api/v1/nodes/{id}/status", AuthMiddleware(h.UpdateNodeStatus))
+	mux.HandleFunc("DELETE /api/v1/nodes/{id}", AuthMiddleware(h.DeleteNode))
+	mux.HandleFunc("GET /api/v1/nodes/{id}/workloads", AuthMiddleware(w.GetNodeWorkloads))
+
+	mux.HandleFunc("POST /api/v1/workloads", AuthMiddleware(w.CreateWorkload))
+	mux.HandleFunc("GET /api/v1/workloads", AuthMiddleware(w.ListWorkloads))
+	mux.HandleFunc("POST /api/v1/workloads/{id}/schedule", AuthMiddleware(w.ScheduleWorkload))
 }
