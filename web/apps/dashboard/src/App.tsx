@@ -22,12 +22,16 @@ const Modal = ({ isOpen, onClose, title, children }: any) => {
   );
 };
 
-const DashboardLayout = ({ children, role, handleLogout, isHealthy, searchQuery, setSearchQuery, notifications }: any) => {
+const DashboardLayout = ({ children, role, handleLogout, isHealthy, searchQuery, setSearchQuery, notifications, nodes, workloads }: any) => {
   const location = useLocation();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showEnvMenu, setShowEnvMenu] = useState(false);
   const [currentEnv, setCurrentEnv] = useState('Production');
+
+  const matchedNodes = searchQuery ? nodes.filter((n: any) => n.hostname.toLowerCase().includes(searchQuery.toLowerCase())) : [];
+  const matchedWorkloads = searchQuery ? workloads.filter((w: any) => w.name.toLowerCase().includes(searchQuery.toLowerCase()) || w.image.toLowerCase().includes(searchQuery.toLowerCase())) : [];
+  const hasResults = matchedNodes.length > 0 || matchedWorkloads.length > 0;
 
   const navItems = [
     { path: '/', label: 'Overview', icon: <LayoutDashboard size={18} /> },
@@ -107,9 +111,35 @@ const DashboardLayout = ({ children, role, handleLogout, isHealthy, searchQuery,
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: C.sidebar, border: `1px solid ${C.border}`, padding: '6px 12px', borderRadius: '6px', width: '300px' }}>
-              <Search size={14} color={C.muted} />
-              <input type="text" placeholder="Search resources..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} style={{ background: 'transparent', border: 'none', color: C.text, outline: 'none', width: '100%', fontSize: '13px' }} />
+            <div style={{ position: 'relative' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: C.sidebar, border: `1px solid ${C.border}`, padding: '6px 12px', borderRadius: '6px', width: '300px' }}>
+                <Search size={14} color={C.muted} />
+                <input type="text" placeholder="Search resources..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} style={{ background: 'transparent', border: 'none', color: C.text, outline: 'none', width: '100%', fontSize: '13px' }} />
+              </div>
+              {searchQuery && hasResults && (
+                <div style={{ position: 'absolute', top: '40px', left: 0, width: '100%', backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '8px', zIndex: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.5)', maxHeight: '300px', overflowY: 'auto' }}>
+                  {matchedNodes.length > 0 && <p style={{ fontSize: '11px', color: C.muted, padding: '4px 8px', margin: 0 }}>NODES</p>}
+                  {matchedNodes.map((n: any) => (
+                    <Link to="/nodes" key={n.id} style={{ textDecoration: 'none' }} onClick={() => setSearchQuery('')}>
+                      <div style={{ padding: '8px', display: 'flex', alignItems: 'center', gap: '10px', borderRadius: '4px', cursor: 'pointer', color: C.text }} onMouseOver={e => e.currentTarget.style.backgroundColor = C.sidebar} onMouseOut={e => e.currentTarget.style.backgroundColor = 'transparent'}>
+                        <Server size={14} color={C.primary} />
+                        <span style={{ fontSize: '13px' }}>{n.hostname}</span>
+                        <span style={{ fontSize: '11px', color: C.muted, marginLeft: 'auto' }}>{n.ip_address}</span>
+                      </div>
+                    </Link>
+                  ))}
+                  {matchedWorkloads.length > 0 && <p style={{ fontSize: '11px', color: C.muted, padding: '4px 8px', marginTop: '8px', marginBottom: 0 }}>WORKLOADS</p>}
+                  {matchedWorkloads.map((w: any) => (
+                    <Link to="/workloads" key={w.id} style={{ textDecoration: 'none' }} onClick={() => setSearchQuery('')}>
+                      <div style={{ padding: '8px', display: 'flex', alignItems: 'center', gap: '10px', borderRadius: '4px', cursor: 'pointer', color: C.text }} onMouseOver={e => e.currentTarget.style.backgroundColor = C.sidebar} onMouseOut={e => e.currentTarget.style.backgroundColor = 'transparent'}>
+                        <Box size={14} color={C.warning} />
+                        <span style={{ fontSize: '13px' }}>{w.name}</span>
+                        <span style={{ fontSize: '11px', color: C.muted, marginLeft: 'auto' }}>{w.image}</span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
             <div style={{ position: 'relative' }}>
               <Bell size={18} color={C.muted} cursor="pointer" onClick={() => setShowNotifications(!showNotifications)} />
@@ -196,7 +226,7 @@ function App() {
 
   return (
     <BrowserRouter>
-      <DashboardLayout role={role} handleLogout={handleLogout} isHealthy={isHealthy} searchQuery={searchQuery} setSearchQuery={setSearchQuery} notifications={notifications}>
+      <DashboardLayout role={role} handleLogout={handleLogout} isHealthy={isHealthy} searchQuery={searchQuery} setSearchQuery={setSearchQuery} notifications={notifications} nodes={nodes} workloads={workloads}>
         <Routes>
           <Route path="/" element={<Overview nodes={nodes} workloads={workloads} isHealthy={isHealthy} sysStats={sysStats} searchQuery={searchQuery} />} />
           <Route path="/nodes" element={<NodesPage nodes={nodes} refresh={fetchData} role={role} searchQuery={searchQuery} addNotification={addNotification} />} />
