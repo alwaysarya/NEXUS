@@ -14,6 +14,8 @@ import (
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/image"
+	"github.com/docker/docker/api/types/mount"
+	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 )
 
@@ -28,6 +30,7 @@ var registeredNodeID string
 var authToken string
 var dockerCli *client.Client
 var runningWorkloads = make(map[string]bool)
+const nexusNetworkName = "nexus-net"
 
 func authReq(method, url string, body io.Reader) (*http.Response, error) {
 	req, err := http.NewRequest(method, url, body)
@@ -38,15 +41,29 @@ func authReq(method, url string, body io.Reader) (*http.Response, error) {
 	return httpClient.Do(req)
 }
 
+func ensureNetwork(ctx context.Context) {
+	networks, _ := dockerCli.NetworkList(ctx, network.ListOptions{})
+	for _, n := range networks {
+		if n.Name == nexusNetworkName {
+			return
+		}
+	}
+	fmt.Println("🌐 Creating NEXUS custom network...")
+	dockerCli.NetworkCreate(ctx, nexusNetworkName, network.CreateOptions{Driver: "bridge"})
+}
+
 func main() {
 	fmt.Println("🤖 Starting NEXUS Node Agent...")
 	
+	// FIX: Mac ke liye Docker socket path hardcode karna padta hai
+	os.Setenv("DOCKER_HOST", "unix:///Users/aryanthakur/.docker/run/docker.sock")
+
 	var err error
 	dockerCli, err = client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil { log.Fatalf("❌ Failed to connect to Docker: %v", err) }
 	fmt.Println("🐳 Connected to Docker daemon")
+	ensureNetwork(context.Background())
 
-	// Environment Variables for Multi-Node Setup
 	hostname := os.Getenv("NODE_HOSTNAME")
 	if hostname == "" { hostname = "agent-node-mac" }
 	nodeIP := os.Getenv("NODE_IP")
@@ -54,7 +71,6 @@ func main() {
 	controlPlaneURL := os.Getenv("CONTROL_PLANE_URL")
 	if controlPlaneURL == "" { controlPlaneURL = "http://localhost:8080" }
 
-	// 1. Login
 	loginPayload := map[string]string{"username": "admin_nexus", "password": "nexus123"}
 	loginJSON, _ := json.Marshal(loginPayload)
 	respLogin, _ := http.Post(controlPlaneURL+"/api/v1/login", "application/json", bytes.NewBuffer(loginJSON))
@@ -64,7 +80,6 @@ func main() {
 	respLogin.Body.Close()
 	fmt.Println("🔑 Logged in successfully")
 
-	// 2. Check existing nodes
 	nodesResp, _ := authReq("GET", controlPlaneURL+"/api/v1/nodes", nil)
 	var nodes []map[string]interface{}
 	json.NewDecoder(nodesResp.Body).Decode(&nodes)
@@ -78,17 +93,13 @@ func main() {
 		}
 	}
 
-	// 3. Register if not found
 	if registeredNodeID == "" {
 		cpuCores := runtime.NumCPU()
 		payload := NodePayload{Hostname: hostname, IPAddress: nodeIP, CPUCores: cpuCores, MemoryMB: 16384}
 		jsonData, _ := json.Marshal(payload)
-		
 		fmt.Printf("Registering new node (%s) with Control Plane...\n", hostname)
 		resp, err := authReq("POST", controlPlaneURL+"/api/v1/nodes", bytes.NewBuffer(jsonData))
-		if err != nil || resp.StatusCode != http.StatusCreated {
-			log.Fatalf("❌ Failed to register. Status: %v", resp.StatusCode)
-		}
+		if err != nil || resp.StatusCode != http.StatusCreated { log.Fatalf("❌ Failed to register. Status: %v", resp.StatusCode) }
 		var result map[string]interface{}
 		json.NewDecoder(resp.Body).Decode(&result)
 		registeredNodeID = result["id"].(string)
@@ -141,9 +152,20 @@ func runDockerContainer(workloadID string, imageName string) error {
 	io.Copy(io.Discard, reader)
 
 	containerName := fmt.Sprintf("nexus-wl-%s", workloadID[:8])
+	volumeName := fmt.Sprintf("nexus-vol-%s", workloadID[:8])
+	
 	resp, err := dockerCli.ContainerCreate(ctx, &container.Config{
 		Image: imageName, Cmd: []string{"sleep", "infinity"},
-	}, nil, nil, nil, containerName)
+	}, &container.HostConfig{
+		NetworkMode: container.NetworkMode(nexusNetworkName),
+		Mounts: []mount.Mount{
+			{
+				Type:   mount.TypeVolume,
+				Source: volumeName,
+				Target: "/app/data",
+			},
+		},
+	}, nil, nil, containerName)
 	if err != nil { return err }
 	return dockerCli.ContainerStart(ctx, resp.ID, container.StartOptions{})
 }
