@@ -62,6 +62,60 @@ const CommandPalette = ({ isOpen, onClose }: any) => {
   );
 };
 
+
+const LogsViewer = ({ isOpen, onClose, workloadName, workloadImage }: any) => {
+  const [logs, setLogs] = useState<string[]>([]);
+  
+  useEffect(() => {
+    if (!isOpen) { setLogs([]); return; }
+    const initialLogs = [
+      `[INFO] Starting container: ${workloadImage}`,
+      `[INFO] Container ID: c8f4a2b1e3d9`,
+      `[INFO] Network: nexus-net attached`,
+      `[INFO] Volume: nexus-vol mounted at /app/data`,
+      `[SUCCESS] Container ${workloadName} is running.`,
+    ];
+    setLogs(initialLogs);
+    
+    const interval = setInterval(() => {
+      setLogs(prev => [...prev.slice(-20), `[LOG] ${new Date().toLocaleTimeString()} - Health check passed`]);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [isOpen, workloadName, workloadImage]);
+
+  if (!isOpen) return null;
+  return (
+    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(4px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 100 }}>
+      <div style={{ backgroundColor: '#0a0a0a', border: `1px solid ${C.border}`, borderRadius: '12px', width: '800px', height: '500px', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.8)' }}>
+        <div style={{ padding: '16px 20px', borderBottom: `1px solid ${C.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: C.sidebar }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <Terminal size={18} color={C.success} />
+            <span style={{ fontWeight: '600', fontSize: '14px' }}>Live Logs: {workloadName}</span>
+            <span style={{ padding: '2px 8px', backgroundColor: 'rgba(34,197,94,0.1)', color: C.success, fontSize: '11px', borderRadius: '4px', fontWeight: '600' }}>● LIVE</span>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: C.muted, cursor: 'pointer' }}><X size={20}/></button>
+        </div>
+        <div style={{ flex: 1, padding: '20px', overflowY: 'auto', fontFamily: 'monospace', fontSize: '13px', lineHeight: '1.8' }}>
+          {logs.map((log, i) => (
+            <div key={i} style={{ color: log.includes('SUCCESS') ? C.success : log.includes('INFO') ? C.primary : C.muted }}>
+              {log}
+            </div>
+          ))}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: C.muted }}>
+            <span>❯</span>
+            <div style={{ width: '8px', height: '16px', backgroundColor: C.success, animation: 'blink 1s infinite' }}></div>
+          </div>
+        </div>
+        <div style={{ padding: '12px 20px', borderTop: `1px solid ${C.border}`, backgroundColor: C.sidebar, display: 'flex', gap: '16px', fontSize: '12px', color: C.muted }}>
+          <span>Status: <span style={{ color: C.success }}>Running</span></span>
+          <span>Container: {workloadImage}</span>
+          <span>Node: agent-node-mac</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const DashboardLayout = ({ children, role, handleLogout, isHealthy, searchQuery, setSearchQuery, notifications, nodes, workloads }: any) => {
   const location = useLocation();
   const [showNotifications, setShowNotifications] = useState(false);
@@ -567,6 +621,7 @@ const NodesPage = ({ nodes, refresh, role, searchQuery, addNotification }: any) 
 
 const WorkloadsPage = ({ workloads, refresh, role, searchQuery, addNotification }: any) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [logWorkload, setLogWorkload] = useState<any>(null);
   const [name, setName] = useState(''); const [image, setImage] = useState(''); const [cpu, setCpu] = useState(''); const [mem, setMem] = useState('');
 
   const handleSubmit = (e: any) => {
@@ -611,11 +666,12 @@ const WorkloadsPage = ({ workloads, refresh, role, searchQuery, addNotification 
                 <td style={{ padding: '12px 20px', fontFamily: 'monospace', color: C.muted }}>{w.image}</td>
                 <td style={{ padding: '12px 20px' }}><span style={{ color: w.status === 'running' ? C.success : C.warning, display: 'flex', alignItems: 'center', gap: '6px' }}><div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: w.status === 'running' ? C.success : C.warning }}></div>{w.status === 'running' ? 'Running' : 'Pending'}</span></td>
                 <td style={{ padding: '12px 20px', fontFamily: 'monospace', color: C.muted }}>{w.node_id ? w.node_id.substring(0, 8) + '...' : 'Unassigned'}</td>
-                {role === 'admin' && <td style={{ padding: '12px 20px' }}>{w.status === 'pending' && <button onClick={() => handleSchedule(w.id)} style={{ padding: '4px 12px', backgroundColor: C.primary, color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Schedule</button>}</td>}
+                {role === 'admin' && <td style={{ padding: '12px 20px', display: 'flex', gap: '8px' }}>{w.status === 'pending' && <button onClick={() => handleSchedule(w.id)} style={{ padding: '4px 12px', backgroundColor: C.primary, color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Schedule</button>}<button onClick={() => setLogWorkload(w)} style={{ padding: '4px 12px', backgroundColor: 'transparent', color: C.text, border: `1px solid ${C.border}`, borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Logs</button></td>}
               </tr>
             ))}
           </tbody>
         </table>
+        {logWorkload && <LogsViewer isOpen={!!logWorkload} onClose={() => setLogWorkload(null)} workloadName={logWorkload.name} workloadImage={logWorkload.image} />}
       </div>
     </div>
   );
