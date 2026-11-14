@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  database:
+    image: postgres:15-alpine
+    container_name: nexus-db
+    environment:
+      POSTGRES_USER: atlas
+      POSTGRES_PASSWORD: atlas
+      POSTGRES_DB: nexus
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U atlas -d nexus"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  control-plane:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile.control-plane
+    container_name: nexus-backend
+    ports:
+      - "8080:8080"
+    environment:
+      DATABASE_URL: postgres://atlas:atlas@database:5432/nexus?sslmode=disable
+    depends_on:
+      database:
+        condition: service_healthy
+
+  intelligence:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile.intelligence
+    container_name: nexus-ai
+    ports:
+      - "8000:8000"
+
+  dashboard:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile.dashboard
+    container_name: nexus-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - control-plane
+
+volumes:
+  pgdata:

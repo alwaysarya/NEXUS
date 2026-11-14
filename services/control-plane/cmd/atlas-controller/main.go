@@ -41,16 +41,17 @@ func AuthMiddleware(next http.Handler) http.Handler {
 }
 
 func main() {
-	database.Connect() // Initialize DB
+	database.Connect()
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/login", api.LoginHandler)
-	mux.HandleFunc("/api/register", api.RegisterHandler) // Naya route
+	mux.HandleFunc("/api/register", api.RegisterHandler)
 	mux.HandleFunc("/api/health", api.CustomHealthHandler)
 
 	protectedMux := http.NewServeMux()
 	protectedMux.HandleFunc("/api/nodes", api.CustomNodesHandler)
-	mux.Handle("/api/nodes", AuthMiddleware(protectedMux))
+	protectedMux.HandleFunc("/api/predict", api.AIPredictHandler) // Naya AI route
+	mux.Handle("/api/", AuthMiddleware(protectedMux))
 
 	handler := CORS(mux)
 	fmt.Println("🚀 Control Plane running on :8080")

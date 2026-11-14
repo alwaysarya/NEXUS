@@ -1,0 +1,12 @@
+FROM golang:1.26-alpine AS builder
+WORKDIR /app
+COPY services/control-plane/go.mod services/control-plane/go.sum ./
+RUN go mod download
+COPY services/control-plane/ .
+RUN go build -o main ./cmd/atlas-controller
+
+FROM alpine:latest
+WORKDIR /app
+COPY --from=builder /app/main .
+EXPOSE 8080
+CMD ["./main"]

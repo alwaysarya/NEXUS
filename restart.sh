@@ -2,16 +2,15 @@
 echo "🛑 Stopping old NEXUS services..."
 kill $(lsof -t -i:8080) 2>/dev/null
 kill $(lsof -t -i:5173) 2>/dev/null
-pkill -f "atlas-agent" 2>/dev/null
+kill $(lsof -t -i:8000) 2>/dev/null
+pkill -f "atlas-controller" 2>/dev/null
 pkill -f "vite" 2>/dev/null
+pkill -f "intelligence/api.py" 2>/dev/null
 
-# Purane Monitoring containers band karo
-docker-compose -f docker-compose.monitoring.yml down > /dev/null 2>&1
+echo "🐳 Stopping Docker containers..."
+docker compose -f deployments/docker/docker-compose.dev.yml down
 
 sleep 2
 
-echo "🧹 Cleaning up old data..."
-psql -d nexus -c "TRUNCATE nodes, workloads CASCADE;" > /dev/null 2>&1
-
-echo "🚀 Restarting NEXUS..."
-./start.sh
+echo "🚀 Starting NEXUS via Docker..."
+docker compose -f deployments/docker/docker-compose.dev.yml up
