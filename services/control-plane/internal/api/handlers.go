@@ -51,3 +51,21 @@ func (h *Handlers) RegisterNode(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(n)
 }
+
+func (h *Handlers) GetNode(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		http.Error(w, "invalid UUID", http.StatusBadRequest)
+		return
+	}
+
+	n, err := h.nodeRepo.GetByID(r.Context(), id)
+	if err != nil {
+		http.Error(w, "node not found", http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(n)
+}
