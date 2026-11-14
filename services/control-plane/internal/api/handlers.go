@@ -94,3 +94,14 @@ func (h *Handlers) UpdateNodeStatus(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"message": "status updated successfully"}`))
 }
+
+func (h *Handlers) ListNodes(w http.ResponseWriter, r *http.Request) {
+	nodes, err := h.nodeRepo.List(r.Context())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(nodes)
+}

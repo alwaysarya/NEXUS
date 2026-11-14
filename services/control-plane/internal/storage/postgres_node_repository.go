@@ -41,3 +41,23 @@ func (r *postgresNodeRepo) UpdateStatus(ctx context.Context, id uuid.UUID, statu
 	_, err := r.db.ExecContext(ctx, query, status, id)
 	return err
 }
+
+func (r *postgresNodeRepo) List(ctx context.Context) ([]*node_registry.Node, error) {
+	query := `SELECT id, hostname, ip_address, status, cpu_cores, memory_mb, created_at, updated_at FROM nodes`
+	rows, err := r.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var nodes []*node_registry.Node
+	for rows.Next() {
+		var n node_registry.Node
+		err := rows.Scan(&n.ID, &n.Hostname, &n.IPAddress, &n.Status, &n.CPUCores, &n.MemoryMB, &n.CreatedAt, &n.UpdatedAt)
+		if err != nil {
+			return nil, err
+		}
+		nodes = append(nodes, &n)
+	}
+	return nodes, nil
+}
