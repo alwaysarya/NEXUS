@@ -1,67 +1,16 @@
-# Environment variables and secrets
-.env
-.env.*
-!.env.example
-
-# Operating system
+# Mac
 .DS_Store
-.AppleDouble
-Thumbs.db
 
-# IDE and editor
-.vscode/
-.idea/
-*.swp
-*.swo
+# Go
+*.exe
+*.test
+*.out
 
-# Dependencies and build artifacts
+# Node
 node_modules/
 dist/
-build/
-target/
-coverage/
-__pycache__/
-.venv/
-venv/
-*.pyc
+.env
 
-# Logs and temporary files
-*.log
-*.tmp
-*.bak
-
-# Private keys and certificates
-*.pem
-*.key
-*.p12
-*.pfx
-*.jks
-*.keystore
-id_rsa
-id_ed25519
-
-# Cloud credentials
-.aws/
-.gcloud/
-.azure/
-
-# Terraform local state
-.terraform/
-*.tfstate
-*.tfstate.*
-
-# Local databases and database backups
-*.sqlite
-*.sqlite3
-*.db
-*.dump
-*.sql.gz
-
-# Local runtime data
-local-data/
-
-# Backup and temporary editor files
-*.backup
-*.bak
-*.tsbuildinfo
-*-backup.*
+# IDE
+.vscode/
+.idea/
