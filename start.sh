@@ -14,12 +14,12 @@ npm run dev &
 FRONTEND_PID=$!
 cd ../..
 
-# (Node Agent ko abhi ke liye hata diya hai taaki error na aaye)
-# echo "🤖 Starting Node Agent..."
-# cd services/node-agent || exit
-# go run cmd/atlas-agent/main.go &
-# AGENT_PID=$!
-# cd ../..
+echo "🤖 Starting Node Agent..."
+cd services/node-agent || exit
+sleep 2
+go run cmd/atlas-agent/main.go &
+AGENT_PID=$!
+cd ../..
 
 echo "---------------------------------------------------"
 echo "🎉 NEXUS is UP and RUNNING!"
@@ -27,5 +27,6 @@ echo "Dashboard: http://localhost:5173"
 echo "Backend API: http://localhost:8080"
 echo "---------------------------------------------------"
 echo "Press Ctrl+C to stop all services."
-trap "echo -e '\n🛑 Stopping NEXUS...'; kill $BACKEND_PID $FRONTEND_PID; exit" INT
+
+trap "echo -e '\n🛑 Stopping NEXUS...'; kill $BACKEND_PID $FRONTEND_PID $AGENT_PID; exit" INT
 wait
