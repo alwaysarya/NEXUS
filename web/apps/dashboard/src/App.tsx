@@ -105,7 +105,8 @@ function App() {
           <div style={{ padding: '10px', flex: 1 }}>
             <p style={{ fontSize: '11px', color: C.muted, fontWeight: '600', marginBottom: '12px', paddingLeft: '12px' }}>PLATFORM</p>
             {[{ path: '/', label: 'Overview', icon: <LayoutDashboard size={18} /> }, { path: '/nodes', label: 'Clusters', icon: <Server size={18} /> }, { path: '/workloads', label: 'Workloads', icon: <Box size={18} /> },
-    { path: '/deployments', label: 'Deployments', icon: <Rocket size={18} /> }, { path: '/security', label: 'Security', icon: <Shield size={18} /> }].map(item => (
+    { path: '/deployments', label: 'Deployments', icon: <Rocket size={18} /> },
+    { path: '/observability', label: 'Observability', icon: <Activity size={18} /> }, { path: '/security', label: 'Security', icon: <Shield size={18} /> }].map(item => (
               <Link key={item.path} to={item.path} style={{ textDecoration: 'none' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 12px', borderRadius: '6px', marginBottom: '2px', color: C.muted }}>{item.icon} <span style={{ fontSize: '14px' }}>{item.label}</span></div>
               </Link>
@@ -160,6 +161,7 @@ function App() {
               <Route path="/nodes" element={<NodesPage nodes={nodes} refresh={fetchData} role={role} isLoading={isLoading} />} />
               <Route path="/workloads" element={<WorkloadsPage workloads={workloads} refresh={fetchData} role={role} isLoading={isLoading} />} />
               <Route path="/deployments" element={<DeploymentsPage />} />
+              <Route path="/observability" element={<ObservabilityPage />} />
               <Route path="/security" element={<SecurityPage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="*" element={<Navigate to="/" />} />
@@ -519,6 +521,109 @@ const DeploymentsPage = () => {
   );
 };
 
+
+
+const ObservabilityPage = () => {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <h1 style={{ margin: 0, fontSize: '24px', fontWeight: '600' }}>Observability</h1>
+          <p style={{ margin: '4px 0 0 0', color: C.muted, fontSize: '14px' }}>Real-time insights into your infrastructure, services, and applications.</p>
+        </div>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button style={{ ...btnStyle, background: 'transparent', border: `1px solid ${C.border}`, color: C.text }}>Last 6 hours <ChevronDown size={14}/></button>
+          <button style={{ ...btnStyle, background: 'transparent', border: `1px solid ${C.border}`, color: C.text }}>Refresh: 30s</button>
+          <button style={btnStyle}><Plus size={16}/> Add Widget</button>
+        </div>
+      </div>
+
+      {/* 4 KPI Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+        {[
+          { label: 'CPU Utilization', val: '42.8%', trend: '-12.4%', color: C.success },
+          { label: 'Memory Usage', val: '67.2%', trend: '+3.8%', color: C.warning },
+          { label: 'Network I/O', val: '3.46 Gbps', trend: '+18.7%', color: C.primary },
+          { label: 'Request Rate', val: '148.7K req/s', trend: '+6.1%', color: C.success },
+        ].map((s, i) => (
+          <div key={i} style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '20px' }}>
+            <p style={{ margin: '0 0 8px 0', color: C.muted, fontSize: '13px' }}>{s.label}</p>
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px' }}>
+              <h2 style={{ margin: 0, fontSize: '24px', fontWeight: '700' }}>{s.val}</h2>
+              <span style={{ fontSize: '12px', color: s.trend.startsWith('+') ? C.success : C.danger, marginBottom: '4px' }}>{s.trend}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Service Performance + Topology */}
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
+        
+        <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '20px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <h2 style={{ margin: 0, fontSize: '16px', fontWeight: '600' }}>Service Performance</h2>
+            <div style={{ display: 'flex', gap: '4px', backgroundColor: C.bg, borderRadius: '6px', padding: '4px' }}>
+              {['Requests', 'Latency', 'Errors', 'Saturation'].map((tab, i) => (
+                <span key={tab} style={{ fontSize: '12px', padding: '4px 10px', borderRadius: '4px', backgroundColor: i === 0 ? C.sidebar : 'transparent', color: i === 0 ? C.text : C.muted, cursor: 'pointer' }}>{tab}</span>
+              ))}
+            </div>
+          </div>
+          <div style={{ height: '220px', display: 'flex', alignItems: 'flex-end', gap: '2px' }}>
+            {Array.from({ length: 60 }).map((_, i) => {
+              const height = Math.sin(i / 5) * 30 + 50 + Math.random() * 20;
+              return <div key={i} style={{ flex: 1, height: `${height}%`, backgroundColor: i > 40 ? C.primary : C.success, borderRadius: '1px 1px 0 0', opacity: 0.7 }}></div>;
+            })}
+          </div>
+        </div>
+
+        <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '20px' }}>
+          <h2 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '600' }}>Service Topology</h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {[
+              { name: 'Auth Service', pods: '12 pods', latency: '4.2 ms', color: C.success },
+              { name: 'Order Service', pods: '18 pods', latency: '8.6 ms', color: C.success },
+              { name: 'Payment Service', pods: '6 pods', latency: '24.1 ms', color: C.warning },
+              { name: 'Database', pods: '3 replicas', latency: '1.8 ms', color: C.success },
+            ].map((svc, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px', backgroundColor: C.bg, borderRadius: '6px', borderLeft: `3px solid ${svc.color}` }}>
+                <div style={{ flex: 1 }}>
+                  <p style={{ margin: 0, fontSize: '13px', fontWeight: '500' }}>{svc.name}</p>
+                  <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: C.muted }}>{svc.pods}</p>
+                </div>
+                <span style={{ fontSize: '12px', color: C.muted, fontFamily: 'monospace' }}>{svc.latency}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Log Stream */}
+      <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px' }}>
+        <div style={{ padding: '16px 20px', borderBottom: `1px solid ${C.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <h2 style={{ margin: 0, fontSize: '16px', fontWeight: '600' }}>Log Stream</h2>
+            <span style={{ fontSize: '11px', color: C.success, backgroundColor: 'rgba(34,197,94,0.1)', padding: '2px 8px', borderRadius: '4px' }}>● Live</span>
+          </div>
+        </div>
+        <div style={{ padding: '16px 20px', fontFamily: 'monospace', fontSize: '12px', lineHeight: '1.8' }}>
+          {[
+            { time: '14:02:17.384', level: 'INFO', msg: '[api-gateway] Request completed GET /v1/orders 200 128 ms', color: C.primary },
+            { time: '14:02:16.981', level: 'WARN', msg: '[payment-service] Elevated response time 241 ms', color: C.warning },
+            { time: '14:02:16.447', level: 'ERROR', msg: '[order-service] Failed to process order reason=timeout', color: C.danger },
+          ].map((log, i) => (
+            <div key={i} style={{ display: 'flex', gap: '12px', padding: '4px 0', borderBottom: i < 2 ? `1px solid ${C.border}` : 'none' }}>
+              <span style={{ color: C.muted }}>{log.time}</span>
+              <span style={{ color: log.color, fontWeight: '600', minWidth: '50px' }}>{log.level}</span>
+              <span>{log.msg}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const SecurityPage = () => (
   <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
