@@ -220,41 +220,34 @@ const Overview = ({ nodes, workloads, isHealthy, sysStats, searchQuery }: any) =
         ))}
       </div>
 
+      <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '20px', marginBottom: '24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h2 style={{ margin: 0, fontSize: '16px', fontWeight: '600' }}>Cluster Performance (Live)</h2>
+          <span style={{ fontSize: '12px', color: C.muted }}>CPU vs Memory</span>
+        </div>
+        <div style={{ height: '250px', width: '100%' }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={[
+              { time: '10:00', cpu: 25, mem: 40 }, { time: '10:05', cpu: 35, mem: 45 },
+              { time: '10:10', cpu: 45, mem: 55 }, { time: '10:15', cpu: 30, mem: 50 },
+              { time: '10:20', cpu: 50, mem: 60 }, { time: '10:25', cpu: 40, mem: 55 },
+              { time: '10:30', cpu: 35, mem: 48 }
+            ]}>
+              <defs>
+                <linearGradient id="colorCpu" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor={C.primary} stopOpacity={0.8}/><stop offset="95%" stopColor={C.primary} stopOpacity={0}/></linearGradient>
+                <linearGradient id="colorMem" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor={C.success} stopOpacity={0.8}/><stop offset="95%" stopColor={C.success} stopOpacity={0}/></linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke={C.border} vertical={false} />
+              <XAxis dataKey="time" stroke={C.muted} fontSize={12} tickLine={false} axisLine={false} />
+              <YAxis stroke={C.muted} fontSize={12} tickLine={false} axisLine={false} />
+              <Tooltip contentStyle={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', color: C.text }} />
+              <Area type="monotone" dataKey="cpu" stroke={C.primary} fillOpacity={1} fill="url(#colorCpu)" />
+              <Area type="monotone" dataKey="mem" stroke={C.success} fillOpacity={1} fill="url(#colorMem)" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
 
-          {/* LIVE CHART */}
-          <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '20px', marginBottom: '24px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h2 style={{ margin: 0, fontSize: '16px', fontWeight: '600' }}>Cluster Performance (Live)</h2>
-              <span style={{ fontSize: '12px', color: C.muted }}>CPU vs Memory</span>
-            </div>
-            <div style={{ height: '250px', width: '100%' }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={[
-                  { time: '10:00', cpu: 25, mem: 40 }, { time: '10:05', cpu: 35, mem: 45 },
-                  { time: '10:10', cpu: 45, mem: 55 }, { time: '10:15', cpu: 30, mem: 50 },
-                  { time: '10:20', cpu: 50, mem: 60 }, { time: '10:25', cpu: 40, mem: 55 },
-                  { time: '10:30', cpu: 35, mem: 48 }
-                ]}>
-                  <defs>
-                    <linearGradient id="colorCpu" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={C.primary} stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor={C.primary} stopOpacity={0}/>
-                    </linearGradient>
-                    <linearGradient id="colorMem" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={C.success} stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor={C.success} stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke={C.border} vertical={false} />
-                  <XAxis dataKey="time" stroke={C.muted} fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis stroke={C.muted} fontSize={12} tickLine={false} axisLine={false} />
-                  <Tooltip contentStyle={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', color: C.text }} />
-                  <Area type="monotone" dataKey="cpu" stroke={C.primary} fillOpacity={1} fill="url(#colorCpu)" />
-                  <Area type="monotone" dataKey="mem" stroke={C.success} fillOpacity={1} fill="url(#colorMem)" />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '20px', minHeight: '250px', position: 'relative', overflow: 'hidden' }}>
@@ -320,6 +313,31 @@ const Overview = ({ nodes, workloads, isHealthy, sysStats, searchQuery }: any) =
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Mem Allocated</span><span style={{ color: C.text }}>{sysStats.allocated_mb} MB</span></div>
                </div>
             )}
+          </div>
+
+          <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h2 style={{ margin: 0, fontSize: '16px', fontWeight: '600' }}>Recent Events</h2>
+              <span style={{ fontSize: '12px', color: C.primary, cursor: 'pointer' }}>View All</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {[
+                { icon: <CheckCircle2 size={16} color={C.success} />, title: 'Node Registered', desc: 'agent-node-mac joined cluster', time: '2m ago' },
+                { icon: <Activity size={16} color={C.primary} />, title: 'Heartbeat Received', desc: 'agent-node-mac is healthy', time: '5m ago' },
+                { icon: <Shield size={16} color={C.warning} />, title: 'Login Successful', desc: 'admin_nexus signed in', time: '10m ago' },
+              ].map((event, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                  <div style={{ padding: '6px', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: '50%' }}>{event.icon}</div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ fontSize: '13px', fontWeight: '500' }}>{event.title}</span>
+                      <span style={{ fontSize: '11px', color: C.muted }}>{event.time}</span>
+                    </div>
+                    <p style={{ margin: '2px 0 0 0', fontSize: '12px', color: C.muted }}>{event.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
           <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '20px' }}>
@@ -491,14 +509,12 @@ const SettingsPage = () => {
       <h1 style={{ margin: '0 0 24px 0', fontSize: '24px', fontWeight: '600' }}>Settings</h1>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '24px' }}>
         
-        {/* Sidebar Settings Menu */}
         <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '12px' }}>
           {['Profile', 'API Keys', 'Preferences', 'Billing', 'Team'].map((item) => (
             <div key={item} onClick={() => setActiveTab(item)} style={{ padding: '10px 12px', fontSize: '14px', cursor: 'pointer', backgroundColor: activeTab === item ? C.sidebar : 'transparent', color: activeTab === item ? C.text : C.muted, borderRadius: '6px', marginBottom: '4px', fontWeight: activeTab === item ? '500' : '400' }}>{item}</div>
           ))}
         </div>
 
-        {/* Content Area */}
         <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '24px' }}>
           
           {activeTab === 'Profile' && (
