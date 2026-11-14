@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { LayoutDashboard, Server, Box, LogOut, Shield, Bell, User, Settings, Activity, Search, ChevronRight, Cpu, Database, Play, Plus, Trash2, ShieldAlert, Globe, HardDrive, Terminal, HelpCircle, MoreHorizontal, ChevronDown, CheckCircle2, AlertCircle, XCircle, Network, X, Layers, ArrowRight, Key } from 'lucide-react';
 
 const C = { bg: '#09090b', sidebar: '#0f0f13', card: '#121216', cardHover: '#1a1a20', border: '#27272a', primary: '#6366f1', success: '#22c55e', warning: '#eab308', danger: '#ef4444', text: '#f4f4f5', muted: '#a1a1aa' };
@@ -219,6 +220,41 @@ const Overview = ({ nodes, workloads, isHealthy, sysStats, searchQuery }: any) =
         ))}
       </div>
 
+
+          {/* LIVE CHART */}
+          <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '20px', marginBottom: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h2 style={{ margin: 0, fontSize: '16px', fontWeight: '600' }}>Cluster Performance (Live)</h2>
+              <span style={{ fontSize: '12px', color: C.muted }}>CPU vs Memory</span>
+            </div>
+            <div style={{ height: '250px', width: '100%' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={[
+                  { time: '10:00', cpu: 25, mem: 40 }, { time: '10:05', cpu: 35, mem: 45 },
+                  { time: '10:10', cpu: 45, mem: 55 }, { time: '10:15', cpu: 30, mem: 50 },
+                  { time: '10:20', cpu: 50, mem: 60 }, { time: '10:25', cpu: 40, mem: 55 },
+                  { time: '10:30', cpu: 35, mem: 48 }
+                ]}>
+                  <defs>
+                    <linearGradient id="colorCpu" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={C.primary} stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor={C.primary} stopOpacity={0}/>
+                    </linearGradient>
+                    <linearGradient id="colorMem" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={C.success} stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor={C.success} stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke={C.border} vertical={false} />
+                  <XAxis dataKey="time" stroke={C.muted} fontSize={12} tickLine={false} axisLine={false} />
+                  <YAxis stroke={C.muted} fontSize={12} tickLine={false} axisLine={false} />
+                  <Tooltip contentStyle={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', color: C.text }} />
+                  <Area type="monotone" dataKey="cpu" stroke={C.primary} fillOpacity={1} fill="url(#colorCpu)" />
+                  <Area type="monotone" dataKey="mem" stroke={C.success} fillOpacity={1} fill="url(#colorMem)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '20px', minHeight: '250px', position: 'relative', overflow: 'hidden' }}>
@@ -537,11 +573,21 @@ const SettingsPage = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div><h4 style={{ margin: '0 0 4px 0', fontSize: '14px', fontWeight: '500' }}>Email Notifications</h4><p style={{ margin: 0, fontSize: '12px', color: C.muted }}>Receive updates about your cluster.</p></div>
-                  <div style={{ width: '40px', height: '20px', backgroundColor: C.primary, borderRadius: '10px', position: 'relative', cursor: 'pointer' }}><div style={{ width: '16px', height: '16px', backgroundColor: 'white', borderRadius: '50%', position: 'absolute', top: '2px', right: '2px' }}></div></div>
+                  <div style={{ width: '44px', height: '24px', backgroundColor: C.success, borderRadius: '12px', position: 'relative', cursor: 'pointer' }}>
+                    <div style={{ width: '20px', height: '20px', backgroundColor: 'white', borderRadius: '50%', position: 'absolute', top: '2px', right: '2px', transition: 'all 0.3s' }}></div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div><h4 style={{ margin: '0 0 4px 0', fontSize: '14px', fontWeight: '500' }}>Auto-refresh Dashboard</h4><p style={{ margin: 0, fontSize: '12px', color: C.muted }}>Refresh data every 5 seconds.</p></div>
+                  <div style={{ width: '44px', height: '24px', backgroundColor: C.success, borderRadius: '12px', position: 'relative', cursor: 'pointer' }}>
+                    <div style={{ width: '20px', height: '20px', backgroundColor: 'white', borderRadius: '50%', position: 'absolute', top: '2px', right: '2px', transition: 'all 0.3s' }}></div>
+                  </div>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div><h4 style={{ margin: '0 0 4px 0', fontSize: '14px', fontWeight: '500' }}>Dark Mode</h4><p style={{ margin: 0, fontSize: '12px', color: C.muted }}>Use dark theme across the dashboard.</p></div>
-                  <div style={{ width: '40px', height: '20px', backgroundColor: C.primary, borderRadius: '10px', position: 'relative', cursor: 'pointer' }}><div style={{ width: '16px', height: '16px', backgroundColor: 'white', borderRadius: '50%', position: 'absolute', top: '2px', right: '2px' }}></div></div>
+                  <div style={{ width: '44px', height: '24px', backgroundColor: C.primary, borderRadius: '12px', position: 'relative', cursor: 'pointer' }}>
+                    <div style={{ width: '20px', height: '20px', backgroundColor: 'white', borderRadius: '50%', position: 'absolute', top: '2px', right: '2px', transition: 'all 0.3s' }}></div>
+                  </div>
                 </div>
               </div>
             </>
