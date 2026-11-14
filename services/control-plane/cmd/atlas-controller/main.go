@@ -32,10 +32,11 @@ func main() {
 	nodeHandlers := api.NewHandlers(nodeRepo)
 	workloadHandlers := api.NewWorkloadHandler(workloadRepo, sched)
 	authHandler := api.NewAuthHandler()
-	healthHandler := api.NewHealthHandler(db) // Yahan db pass kiya
+	healthHandler := api.NewHealthHandler(db)
+	metricsHandler := api.NewMetricsHandler()
 
 	mux := http.NewServeMux()
-	api.RegisterRoutes(mux, nodeHandlers, workloadHandlers, authHandler, healthHandler)
+	api.RegisterRoutes(mux, nodeHandlers, workloadHandlers, authHandler, healthHandler, metricsHandler)
 
 	port := ":8080"
 	fmt.Printf("Atlas Control Plane running on %s\n", port)
