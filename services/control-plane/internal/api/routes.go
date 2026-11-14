@@ -13,14 +13,14 @@ func RegisterRoutes(mux *http.ServeMux, h *Handlers, w *WorkloadHandler, auth *A
 	mux.HandleFunc("GET /metrics", metrics.ServeMetrics)
 
 	// Protected Routes
-	mux.HandleFunc("POST /api/v1/nodes", AuthMiddleware(h.RegisterNode))
+	mux.HandleFunc("POST /api/v1/nodes", AuthMiddleware(AdminOnly(h.RegisterNode)))
 	mux.HandleFunc("GET /api/v1/nodes", AuthMiddleware(h.ListNodes))
 	mux.HandleFunc("GET /api/v1/nodes/{id}", AuthMiddleware(h.GetNode))
-	mux.HandleFunc("PATCH /api/v1/nodes/{id}/status", AuthMiddleware(h.UpdateNodeStatus))
-	mux.HandleFunc("DELETE /api/v1/nodes/{id}", AuthMiddleware(h.DeleteNode))
+	mux.HandleFunc("PATCH /api/v1/nodes/{id}/status", AuthMiddleware(AdminOnly(h.UpdateNodeStatus)))
+	mux.HandleFunc("DELETE /api/v1/nodes/{id}", AuthMiddleware(AdminOnly(h.DeleteNode)))
 	mux.HandleFunc("GET /api/v1/nodes/{id}/workloads", AuthMiddleware(w.GetNodeWorkloads))
 
-	mux.HandleFunc("POST /api/v1/workloads", AuthMiddleware(w.CreateWorkload))
+	mux.HandleFunc("POST /api/v1/workloads", AuthMiddleware(AdminOnly(w.CreateWorkload)))
 	mux.HandleFunc("GET /api/v1/workloads", AuthMiddleware(w.ListWorkloads))
-	mux.HandleFunc("POST /api/v1/workloads/{id}/schedule", AuthMiddleware(w.ScheduleWorkload))
+	mux.HandleFunc("POST /api/v1/workloads/{id}/schedule", AuthMiddleware(AdminOnly(w.ScheduleWorkload)))
 }

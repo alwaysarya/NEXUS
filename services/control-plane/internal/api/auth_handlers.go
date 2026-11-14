@@ -5,14 +5,12 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/alwaysarya/nexus/services/control-plane/internal/auth"
 	"github.com/alwaysarya/nexus/services/control-plane/internal/node_registry"
 	"github.com/alwaysarya/nexus/services/control-plane/internal/storage"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
-
-var jwtKey = []byte("my_secret_key_nexus")
 
 type AuthHandler struct {
 	userRepo storage.UserRepository
@@ -33,28 +31,18 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
-	if err != nil {
-		http.Error(w, "failed to hash password", http.StatusInternalServerError)
-		return
-	}
-
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	role := req.Role
 	if role == "" { role = "viewer" }
 
 	user := &node_registry.User{
-		ID:           uuid.New(),
-		Username:     req.Username,
-		PasswordHash: string(hashedPassword),
-		Role:         role,
-		CreatedAt:    time.Now(),
+		ID: uuid.New(), Username: req.Username, PasswordHash: string(hashedPassword), Role: role, CreatedAt: time.Now(),
 	}
 
 	if err := h.userRepo.Create(r.Context(), user); err != nil {
-		http.Error(w, "user already exists or database error", http.StatusBadRequest)
+		http.Error(w, "user already exists", http.StatusBadRequest)
 		return
 	}
-
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]string{"message": "user created successfully"})
 }
@@ -80,14 +68,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	expirationTime := time.Now().Add(24 * time.Hour)
-	claims := &jwt.RegisteredClaims{
-		ExpiresAt: jwt.NewNumericDate(expirationTime),
-		Subject:   user.Username,
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString(jwtKey)
+	tokenString, err := auth.GenerateToken(user.Username, user.Role)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
