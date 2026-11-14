@@ -677,29 +677,113 @@ const WorkloadsPage = ({ workloads, refresh, role, searchQuery, addNotification 
   );
 };
 
-const SecurityPage = () => (
-  <div>
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}><h1 style={{ margin: 0, fontSize: '24px', fontWeight: '600' }}>Security Operations</h1></div>
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
-      <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '16px' }}><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}><span style={{ color: C.muted, fontSize: '13px', fontWeight: '500' }}>Security Posture</span><Shield size={16} color={C.success} /></div><div style={{ fontSize: '24px', fontWeight: '600', color: C.success }}>96.8%</div></div>
-      <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '16px' }}><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}><span style={{ color: C.muted, fontSize: '13px', fontWeight: '500' }}>Active Threats</span><ShieldAlert size={16} color={C.danger} /></div><div style={{ fontSize: '24px', fontWeight: '600', color: C.danger }}>0</div></div>
-      <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '16px' }}><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}><span style={{ color: C.muted, fontSize: '13px', fontWeight: '500' }}>Blocked Access</span><Globe size={16} color={C.muted} /></div><div style={{ fontSize: '24px', fontWeight: '600' }}>142</div></div>
+const SecurityPage = () => {
+  const [threats, setThreats] = useState([
+    { time: '2m ago', type: 'Unauthorized Access', severity: 'High', ip: '192.168.1.45', status: 'Blocked' },
+    { time: '15m ago', type: 'Port Scan Detected', severity: 'Medium', ip: '10.0.0.88', status: 'Mitigated' },
+    { time: '1h ago', type: 'Failed Login Attempt', severity: 'Low', ip: '172.16.0.12', status: 'Blocked' },
+  ]);
+
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <div>
+          <h1 style={{ margin: 0, fontSize: '24px', fontWeight: '600' }}>Security Operations</h1>
+          <p style={{ margin: '4px 0 0 0', color: C.muted, fontSize: '14px' }}>Real-time threat detection and response.</p>
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
+        <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '20px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}><span style={{ color: C.muted, fontSize: '13px', fontWeight: '500' }}>Security Posture</span><Shield size={16} color={C.success} /></div>
+          <div style={{ fontSize: '28px', fontWeight: '600', color: C.success }}>98.4%</div>
+          <div style={{ fontSize: '12px', color: C.success, marginTop: '4px' }}>↑ 2.1% from last week</div>
+        </div>
+        <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '20px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}><span style={{ color: C.muted, fontSize: '13px', fontWeight: '500' }}>Active Threats</span><ShieldAlert size={16} color={C.danger} /></div>
+          <div style={{ fontSize: '28px', fontWeight: '600', color: C.danger }}>3</div>
+          <div style={{ fontSize: '12px', color: C.muted, marginTop: '4px' }}>All mitigations active</div>
+        </div>
+        <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '20px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}><span style={{ color: C.muted, fontSize: '13px', fontWeight: '500' }}>Blocked Attacks</span><Globe size={16} color={C.primary} /></div>
+          <div style={{ fontSize: '28px', fontWeight: '600' }}>1,247</div>
+          <div style={{ fontSize: '12px', color: C.muted, marginTop: '4px' }}>Last 30 days</div>
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px', marginBottom: '24px' }}>
+        {/* Threat Map */}
+        <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '20px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <h2 style={{ margin: 0, fontSize: '16px', fontWeight: '600' }}>Global Threat Map</h2>
+            <span style={{ fontSize: '12px', color: C.success, backgroundColor: 'rgba(34,197,94,0.1)', padding: '4px 8px', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: C.success }}></div> Live</span>
+          </div>
+          <div style={{ height: '280px', backgroundColor: C.bg, borderRadius: '8px', border: `1px solid ${C.border}`, position: 'relative', overflow: 'hidden', backgroundImage: 'radial-gradient(circle at 30% 40%, rgba(99,102,241,0.1), transparent 50%), radial-gradient(circle at 70% 60%, rgba(34,197,94,0.1), transparent 50%)' }}>
+            {/* Animated threat dots */}
+            {[
+              { top: '30%', left: '25%', color: C.danger, delay: '0s' },
+              { top: '45%', left: '60%', color: C.warning, delay: '0.5s' },
+              { top: '35%', left: '75%', color: C.danger, delay: '1s' },
+              { top: '55%', left: '40%', color: C.success, delay: '1.5s' },
+            ].map((dot, i) => (
+              <div key={i} style={{ position: 'absolute', top: dot.top, left: dot.left, width: '12px', height: '12px', borderRadius: '50%', backgroundColor: dot.color, boxShadow: `0 0 20px ${dot.color}`, animation: `pulse 2s infinite ${dot.delay}` }}></div>
+            ))}
+            <div style={{ position: 'absolute', bottom: '16px', left: '16px', fontSize: '12px', color: C.muted, display: 'flex', gap: '16px' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: C.danger }}></div> Attack</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: C.warning }}></div> Scanning</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: C.success }}></div> Secure</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Compliance */}
+        <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '20px' }}>
+          <h2 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '600' }}>Compliance</h2>
+          {[
+            { name: 'SOC 2 Type II', score: 100 },
+            { name: 'GDPR', score: 96 },
+            { name: 'HIPAA', score: 98 },
+            { name: 'ISO 27001', score: 92 },
+          ].map((item, i) => (
+            <div key={i} style={{ marginBottom: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                <span style={{ fontSize: '13px' }}>{item.name}</span>
+                <span style={{ fontSize: '13px', color: item.score >= 95 ? C.success : C.warning, fontWeight: '600' }}>{item.score}%</span>
+              </div>
+              <div style={{ width: '100%', height: '4px', backgroundColor: C.border, borderRadius: '2px' }}>
+                <div style={{ width: `${item.score}%`, height: '100%', backgroundColor: item.score >= 95 ? C.success : C.warning, borderRadius: '2px' }}></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Threats List */}
+      <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px' }}>
+        <div style={{ padding: '16px 20px', borderBottom: `1px solid ${C.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h2 style={{ margin: 0, fontSize: '16px', fontWeight: '600' }}>Recent Threats</h2>
+          <button style={{ ...btnStyle, padding: '6px 12px', fontSize: '12px', background: 'transparent', border: `1px solid ${C.border}`, color: C.text }}>Export Logs</button>
+        </div>
+        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
+          <thead><tr style={{ borderBottom: `1px solid ${C.border}`, color: C.muted }}>
+            <th style={{ padding: '12px 20px', fontWeight: '500' }}>Time</th><th style={{ padding: '12px 20px', fontWeight: '500' }}>Threat Type</th><th style={{ padding: '12px 20px', fontWeight: '500' }}>Severity</th><th style={{ padding: '12px 20px', fontWeight: '500' }}>Source IP</th><th style={{ padding: '12px 20px', fontWeight: '500' }}>Status</th>
+          </tr></thead>
+          <tbody>
+            {threats.map((t, i) => (
+              <tr key={i} style={{ borderBottom: `1px solid ${C.border}` }}>
+                <td style={{ padding: '12px 20px', color: C.muted }}>{t.time}</td>
+                <td style={{ padding: '12px 20px', fontWeight: '500' }}>{t.type}</td>
+                <td style={{ padding: '12px 20px' }}><span style={{ color: t.severity === 'High' ? C.danger : t.severity === 'Medium' ? C.warning : C.muted, backgroundColor: t.severity === 'High' ? 'rgba(239,68,68,0.1)' : t.severity === 'Medium' ? 'rgba(245,158,11,0.1)' : 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: '4px', fontSize: '11px' }}>{t.severity}</span></td>
+                <td style={{ padding: '12px 20px', fontFamily: 'monospace', color: C.muted }}>{t.ip}</td>
+                <td style={{ padding: '12px 20px' }}><span style={{ color: C.success, display: 'flex', alignItems: 'center', gap: '6px' }}><CheckCircle2 size={14}/> {t.status}</span></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
-    <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px' }}>
-      <div style={{ padding: '16px 20px', borderBottom: `1px solid ${C.border}` }}><h2 style={{ margin: 0, fontSize: '16px', fontWeight: '600' }}>Audit Event Stream</h2></div>
-      <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
-        <thead><tr style={{ borderBottom: `1px solid ${C.border}`, color: C.muted }}>
-          <th style={{ padding: '12px 20px', fontWeight: '500' }}>Time</th><th style={{ padding: '12px 20px', fontWeight: '500' }}>Event</th><th style={{ padding: '12px 20px', fontWeight: '500' }}>Actor</th><th style={{ padding: '12px 20px', fontWeight: '500' }}>Status</th>
-        </tr></thead>
-        <tbody>
-          <tr style={{ borderBottom: `1px solid ${C.border}` }}><td style={{ padding: '12px 20px', color: C.muted }}>20:15:04</td><td style={{ padding: '12px 20px' }}>Role updated (Viewer → Admin)</td><td style={{ padding: '12px 20px', fontFamily: 'monospace' }}>admin@nexus.io</td><td style={{ padding: '12px 20px' }}><span style={{ color: C.success, backgroundColor: 'rgba(34,197,94,0.1)', padding: '2px 8px', borderRadius: '4px', fontSize: '11px' }}>Success</span></td></tr>
-          <tr style={{ borderBottom: `1px solid ${C.border}` }}><td style={{ padding: '12px 20px', color: C.muted }}>20:12:47</td><td style={{ padding: '12px 20px' }}>Policy modified (network-ingress)</td><td style={{ padding: '12px 20px', fontFamily: 'monospace' }}>secops@nexus.io</td><td style={{ padding: '12px 20px' }}><span style={{ color: C.success, backgroundColor: 'rgba(34,197,94,0.1)', padding: '2px 8px', borderRadius: '4px', fontSize: '11px' }}>Success</span></td></tr>
-          <tr style={{ borderBottom: `1px solid ${C.border}` }}><td style={{ padding: '12px 20px', color: C.muted }}>20:07:29</td><td style={{ padding: '12px 20px' }}>Access denied (unauthorized scope)</td><td style={{ padding: '12px 20px', fontFamily: 'monospace' }}>user@external.com</td><td style={{ padding: '12px 20px' }}><span style={{ color: C.danger, backgroundColor: 'rgba(239,68,68,0.1)', padding: '2px 8px', borderRadius: '4px', fontSize: '11px' }}>Blocked</span></td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-);
+  );
+};
 
 
 const UserProfilePage = ({ nodes, workloads }: any) => {
