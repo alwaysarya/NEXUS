@@ -1,98 +1,44 @@
 package main
 
 import (
-	"context"
-	"errors"
+	"database/sql"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
-	"os/signal"
-	"syscall"
-	"time"
 
 	"github.com/alwaysarya/nexus/services/control-plane/internal/api"
-	"github.com/alwaysarya/nexus/services/control-plane/internal/config"
-	"github.com/alwaysarya/nexus/services/control-plane/internal/scheduler"
 	"github.com/alwaysarya/nexus/services/control-plane/internal/storage"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 func main() {
-	port := os.Getenv("NEXUS_CONTROL_PLANE_PORT")
-	if port == "" {
-		port = "8080"
+	dbURL := os.Getenv("DATABASE_URL")
+	if dbURL == "" {
+		dbURL = "postgres://postgres:postgres@localhost:5432/nexus?sslmode=disable"
 	}
 
-	ctx, stop := signal.NotifyContext(
-		context.Background(),
-		os.Interrupt,
-		syscall.SIGTERM,
-	)
-	defer stop()
-
-	dbConfig, err := config.LoadPostgresConfig()
+	db, err := sql.Open("pgx", dbURL)
 	if err != nil {
-		log.Fatalf("failed to load PostgreSQL configuration: %v", err)
-	}
-
-	db, err := storage.NewPostgres(ctx, dbConfig)
-	if err != nil {
-		log.Fatalf("failed to connect to PostgreSQL: %v", err)
+		log.Fatalf("Error opening DB: %v", err)
 	}
 	defer db.Close()
 
-	log.Println("NEXUS PostgreSQL connection established")
+	if err := db.Ping(); err != nil {
+		log.Printf("Warning: DB not reachable: %v", err)
+	} else {
+		log.Println("Connected to database")
+	}
 
-	repository := storage.NewPostgresNodeRepository(db)
-	nodeAPI := api.NewNodeAPI(repository)
+	repo := storage.NewPostgresNodeRepository(db)
+	handlers := api.NewHandlers(repo)
 
 	mux := http.NewServeMux()
-	api.RegisterRoutes(mux, nodeAPI)
-	workloadScheduler := scheduler.New(repository)
-	workloadRepository := storage.NewPostgresWorkloadRepository(db)
-	api.RegisterWorkloadRoutes(mux, workloadScheduler, workloadRepository)
+	api.RegisterRoutes(mux, handlers)
 
-	monitorDone := make(chan struct{})
-	go func() {
-		defer close(monitorDone)
-		nodeAPI.StartMonitor(ctx, 5*time.Second, 30*time.Second)
-	}()
-
-	server := &http.Server{
-		Addr:              ":" + port,
-		Handler:           mux,
-		ReadHeaderTimeout: 5 * time.Second,
+	port := ":8080"
+	fmt.Printf("Atlas Control Plane running on %s\n", port)
+	if err := http.ListenAndServe(port, mux); err != nil {
+		log.Fatalf("Server failed: %v", err)
 	}
-
-	serverErrors := make(chan error, 1)
-
-	go func() {
-		log.Printf("NEXUS Control Plane starting on port %s", port)
-		serverErrors <- server.ListenAndServe()
-	}()
-
-	select {
-	case err := <-serverErrors:
-		if !errors.Is(err, http.ErrServerClosed) {
-			log.Printf("Control Plane server failed: %v", err)
-			stop()
-		}
-
-	case <-ctx.Done():
-		log.Println("NEXUS Control Plane shutting down")
-	}
-
-	shutdownCtx, cancel := context.WithTimeout(
-		context.Background(),
-		10*time.Second,
-	)
-	defer cancel()
-
-	if err := server.Shutdown(shutdownCtx); err != nil {
-		log.Printf("Graceful shutdown failed: %v", err)
-		_ = server.Close()
-	}
-
-	<-monitorDone
-
-	log.Println("NEXUS Control Plane stopped")
 }
