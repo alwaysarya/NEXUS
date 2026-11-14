@@ -1,10 +1,16 @@
 import { useState } from 'react';
 import { LayoutDashboard, Box, Layers, Network, Database, Activity, Shield, DollarSign, Terminal, ChevronDown, Boxes, ChevronRight } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 
 export default function Sidebar() {
   const location = useLocation();
-  const [expandedMenus, setExpandedMenus] = useState({ Observability: false, Security: false });
+  const [searchParams] = useSearchParams();
+  
+  // Default state: agar URL mein security hai toh open rakho
+  const [expandedMenus, setExpandedMenus] = useState({ 
+    Observability: location.pathname.includes('observability'), 
+    Security: location.pathname.includes('security') 
+  });
 
   const toggleMenu = (label) => {
     setExpandedMenus(prev => ({ ...prev, [label]: !prev[label] }));
@@ -35,6 +41,10 @@ export default function Sidebar() {
       hasDropdown: true, 
       path: '/security',
       subItems: [
+        { label: 'Threats & Incidents', path: '/security?tab=threats' },
+        { label: 'Identity & Access', path: '/security?tab=identity' },
+        { label: 'Policies & Compliance', path: '/security?tab=policies' },
+        { label: 'Audit Logs', path: '/security?tab=audit' },
         { label: 'Access & RBAC', path: '/security?tab=rbac' }
       ]
     },
@@ -53,20 +63,23 @@ export default function Sidebar() {
 
       <div className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
         {navItems.map((item) => {
-          const isActive = location.pathname === item.path;
+          const isActive = location.pathname === item.path && !item.hasDropdown;
           const isExpanded = expandedMenus[item.label];
 
           return (
             <div key={item.label}>
               {item.hasDropdown ? (
-                <div className="flex items-center justify-between px-3 py-2 rounded-md cursor-pointer text-sm text-gray-400 hover:text-white hover:bg-white/5">
-                  <Link to={item.path} className="flex items-center gap-3 flex-1">
+                <div 
+                  onClick={() => toggleMenu(item.label)}
+                  className={`flex items-center justify-between px-3 py-2 rounded-md cursor-pointer text-sm ${
+                    location.pathname === item.path ? 'text-white font-medium' : 'text-gray-400 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
                     <item.icon size={18} />
                     <span>{item.label}</span>
-                  </Link>
-                  <div onClick={() => toggleMenu(item.label)} className="p-1">
-                    <ChevronDown size={14} className={`transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
                   </div>
+                  <ChevronDown size={14} className={`transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
                 </div>
               ) : (
                 <Link
@@ -85,19 +98,26 @@ export default function Sidebar() {
               {/* Sub-menu items */}
               {item.hasDropdown && isExpanded && (
                 <div className="ml-4 pl-4 border-l border-border mt-1 space-y-1">
-                  {item.subItems.map((sub) => (
-                    <Link
-                      key={sub.label}
-                      to={sub.path}
-                      className="flex items-center justify-between px-2 py-1.5 rounded text-sm text-gray-400 hover:text-white hover:bg-white/5"
-                    >
-                      <div className="flex items-center gap-2">
-                        <ChevronRight size={12} className="text-gray-600" />
-                        <span>{sub.label}</span>
-                      </div>
-                      {sub.badge && <span className="bg-primary text-white text-[10px] px-1.5 rounded-full">{sub.badge}</span>}
-                    </Link>
-                  ))}
+                  {item.subItems.map((sub) => {
+                    // Check if sub item is active based on URL params
+                    const isSubActive = location.pathname === item.path && searchParams.get('tab') === sub.path.split('=')[1];
+                    
+                    return (
+                      <Link
+                        key={sub.label}
+                        to={sub.path}
+                        className={`flex items-center justify-between px-2 py-1.5 rounded text-sm ${
+                          isSubActive ? 'text-primary font-medium bg-primary/5' : 'text-gray-400 hover:text-white hover:bg-white/5'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <ChevronRight size={12} className={isSubActive ? 'text-primary' : 'text-gray-600'} />
+                          <span>{sub.label}</span>
+                        </div>
+                        {sub.badge && <span className="bg-primary text-white text-[10px] px-1.5 rounded-full">{sub.badge}</span>}
+                      </Link>
+                    );
+                  })}
                 </div>
               )}
             </div>

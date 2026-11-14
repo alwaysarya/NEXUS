@@ -9,6 +9,8 @@ import OverviewPage from './components/OverviewPage';
 import WorkloadsPage from './components/WorkloadsPage';
 import NetworkingPage from './components/NetworkingPage';
 import StoragePage from './components/StoragePage';
+import CostPage from './components/CostPage';
+import AutomationPage from './components/AutomationPage';
 
 function App() {
   return (
@@ -27,6 +29,8 @@ function App() {
             <Route path="/storage" element={<StoragePage />} />
             <Route path="/observability" element={<ObservabilityPage />} />
             <Route path="/security" element={<SecurityPage />} />
+            <Route path="/cost" element={<CostPage />} />
+            <Route path="/automation" element={<AutomationPage />} />
             <Route path="*" element={<div className="p-6 text-gray-400">Page Under Construction</div>} />
           </Routes>
         </main>
