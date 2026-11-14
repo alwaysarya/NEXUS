@@ -203,6 +203,7 @@ const DashboardLayout = ({ children, role, handleLogout, isHealthy, searchQuery,
               </div>
               {showProfileMenu && (
                 <div style={{ position: 'absolute', right: 0, top: '40px', width: '180px', backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '6px', zIndex: 10, boxShadow: '0 4px 12px rgba(0,0,0,0.5)' }}>
+                  <Link to="/profile" style={{ textDecoration: 'none' }}><div style={{ padding: '8px 12px', fontSize: '13px', cursor: 'pointer', borderRadius: '4px', color: C.text }} onMouseOver={e => e.currentTarget.style.backgroundColor = C.sidebar} onMouseOut={e => e.currentTarget.style.backgroundColor = 'transparent'}>My Profile</div></Link>
                   <Link to="/settings" style={{ textDecoration: 'none' }}><div style={{ padding: '8px 12px', fontSize: '13px', cursor: 'pointer', borderRadius: '4px', color: C.text }} onMouseOver={e => e.currentTarget.style.backgroundColor = C.sidebar} onMouseOut={e => e.currentTarget.style.backgroundColor = 'transparent'}>Account Settings</div></Link>
                   <div onClick={handleLogout} style={{ padding: '8px 12px', fontSize: '13px', cursor: 'pointer', borderRadius: '4px', color: C.danger }} onMouseOver={e => e.currentTarget.style.backgroundColor = 'rgba(239,68,68,0.1)'} onMouseOut={e => e.currentTarget.style.backgroundColor = 'transparent'}>Sign Out</div>
                 </div>
@@ -285,6 +286,7 @@ function App() {
           <Route path="/workloads" element={<WorkloadsPage workloads={workloads} refresh={fetchData} role={role} searchQuery={searchQuery} addNotification={addNotification} />} />
           <Route path="/security" element={<SecurityPage />} />
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/profile" element={<UserProfilePage nodes={nodes} workloads={workloads} />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </DashboardLayout>
@@ -618,6 +620,112 @@ const SecurityPage = () => (
     </div>
   </div>
 );
+
+
+const UserProfilePage = ({ nodes, workloads }: any) => {
+  return (
+    <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+      <h1 style={{ margin: '0 0 24px 0', fontSize: '24px', fontWeight: '600' }}>My Profile</h1>
+
+      {/* Hero Card */}
+      <div style={{ background: `linear-gradient(135deg, ${C.primary}30 0%, transparent 100%)`, border: `1px solid ${C.border}`, borderRadius: '12px', padding: '32px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '24px' }}>
+        <div style={{ width: '96px', height: '96px', borderRadius: '50%', backgroundColor: '#4f46e5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '36px', fontWeight: 'bold', color: 'white', border: '4px solid rgba(255,255,255,0.1)' }}>A</div>
+        <div style={{ flex: 1 }}>
+          <h2 style={{ margin: 0, fontSize: '28px', fontWeight: '700' }}>Admin User</h2>
+          <p style={{ margin: '4px 0 12px 0', color: C.muted, fontSize: '14px' }}>Platform Administrator • admin@nexus.io</p>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <span style={{ padding: '4px 12px', backgroundColor: 'rgba(34,197,94,0.1)', color: C.success, borderRadius: '20px', fontSize: '12px', fontWeight: '600' }}>● Active</span>
+            <span style={{ padding: '4px 12px', backgroundColor: 'rgba(99,102,241,0.1)', color: C.primary, borderRadius: '20px', fontSize: '12px', fontWeight: '600' }}>Pro Plan</span>
+          </div>
+        </div>
+        <button style={{ ...btnStyle, background: 'transparent', border: `1px solid ${C.border}`, color: C.text }}><Settings size={16}/> Edit Profile</button>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
+        
+        {/* Left Column */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          
+          {/* Stats Grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+            <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '20px' }}>
+              <Server size={20} color={C.primary} style={{ marginBottom: '12px' }} />
+              <h3 style={{ margin: 0, fontSize: '24px', fontWeight: '700' }}>{nodes.length}</h3>
+              <p style={{ margin: '4px 0 0 0', color: C.muted, fontSize: '12px' }}>Nodes Managed</p>
+            </div>
+            <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '20px' }}>
+              <Box size={20} color={C.warning} style={{ marginBottom: '12px' }} />
+              <h3 style={{ margin: 0, fontSize: '24px', fontWeight: '700' }}>{workloads.length}</h3>
+              <p style={{ margin: '4px 0 0 0', color: C.muted, fontSize: '12px' }}>Deployments</p>
+            </div>
+            <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '20px' }}>
+              <Activity size={20} color={C.success} style={{ marginBottom: '12px' }} />
+              <h3 style={{ margin: 0, fontSize: '24px', fontWeight: '700' }}>99.98%</h3>
+              <p style={{ margin: '4px 0 0 0', color: C.muted, fontSize: '12px' }}>Uptime</p>
+            </div>
+          </div>
+
+          {/* Recent Activity */}
+          <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '24px' }}>
+            <h2 style={{ margin: '0 0 20px 0', fontSize: '16px', fontWeight: '600' }}>Recent Activity</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              {[
+                { icon: <Server size={16} color={C.primary} />, title: 'Registered new node', desc: 'agent-node-mac joined the cluster', time: '2 hours ago' },
+                { icon: <Play size={16} color={C.warning} />, title: 'Deployed workload', desc: 'nginx-container deployed to prod', time: '5 hours ago' },
+                { icon: <Shield size={16} color={C.success} />, title: 'Security audit passed', desc: 'Weekly compliance check successful', time: '1 day ago' },
+                { icon: <Key size={16} color={C.muted} />, title: 'Generated API key', desc: 'New agent key created', time: '2 days ago' },
+              ].map((act, i) => (
+                <div key={i} style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+                  <div style={{ padding: '8px', backgroundColor: C.bg, borderRadius: '50%' }}>{act.icon}</div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ fontWeight: '500', fontSize: '14px' }}>{act.title}</span>
+                      <span style={{ fontSize: '11px', color: C.muted }}>{act.time}</span>
+                    </div>
+                    <p style={{ margin: '2px 0 0 0', fontSize: '12px', color: C.muted }}>{act.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          {/* Contact Info */}
+          <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '24px' }}>
+            <h2 style={{ margin: '0 0 20px 0', fontSize: '16px', fontWeight: '600' }}>Contact Information</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', fontSize: '13px' }}>
+              <div><label style={{ color: C.muted, fontSize: '11px', display: 'block', marginBottom: '4px' }}>Email</label><span>admin@nexus.io</span></div>
+              <div><label style={{ color: C.muted, fontSize: '11px', display: 'block', marginBottom: '4px' }}>Phone</label><span>+91 98765 43210</span></div>
+              <div><label style={{ color: C.muted, fontSize: '11px', display: 'block', marginBottom: '4px' }}>Location</label><span>Mumbai, India</span></div>
+              <div><label style={{ color: C.muted, fontSize: '11px', display: 'block', marginBottom: '4px' }}>Joined</label><span>January 2024</span></div>
+            </div>
+          </div>
+
+          {/* Security */}
+          <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '24px' }}>
+            <h2 style={{ margin: '0 0 20px 0', fontSize: '16px', fontWeight: '600' }}>Security</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '13px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ color: C.muted }}>2FA</span>
+                <span style={{ color: C.success, fontSize: '12px', fontWeight: '600' }}>Enabled</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ color: C.muted }}>Password</span>
+                <span style={{ color: C.muted, fontSize: '12px' }}>Changed 30d ago</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ color: C.muted }}>API Keys</span>
+                <span style={{ color: C.muted, fontSize: '12px' }}>1 active</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const SettingsPage = () => {
   const [activeTab, setActiveTab] = useState('Profile');
