@@ -4,9 +4,11 @@ import (
 	"net/http"
 )
 
-func RegisterRoutes(mux *http.ServeMux, h *Handlers, w *WorkloadHandler, auth *AuthHandler) {
+func RegisterRoutes(mux *http.ServeMux, h *Handlers, w *WorkloadHandler, auth *AuthHandler, health *HealthHandler) {
 	// Public Routes
 	mux.HandleFunc("POST /api/v1/login", auth.Login)
+	mux.HandleFunc("GET /health/live", health.Live)
+	mux.HandleFunc("GET /health/ready", health.Ready)
 
 	// Protected Routes (Needs JWT Token)
 	mux.HandleFunc("POST /api/v1/nodes", AuthMiddleware(h.RegisterNode))
