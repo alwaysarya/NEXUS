@@ -22,6 +22,46 @@ const Modal = ({ isOpen, onClose, title, children }: any) => {
   );
 };
 
+
+const CommandPalette = ({ isOpen, onClose }: any) => {
+  const [query, setQuery] = useState('');
+  if (!isOpen) return null;
+
+  const commands = [
+    { icon: <LayoutDashboard size={16} />, label: 'Go to Overview', path: '/' },
+    { icon: <Server size={16} />, label: 'Go to Compute Nodes', path: '/nodes' },
+    { icon: <Box size={16} />, label: 'Go to Workloads', path: '/workloads' },
+    { icon: <Shield size={16} />, label: 'Go to Security', path: '/security' },
+    { icon: <Settings size={16} />, label: 'Go to Settings', path: '/settings' },
+    { icon: <Plus size={16} />, label: 'Add New Node', path: '/nodes' },
+    { icon: <Play size={16} />, label: 'Deploy Workload', path: '/workloads' },
+  ];
+
+  const filtered = commands.filter(c => c.label.toLowerCase().includes(query.toLowerCase()));
+
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(2px)', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', paddingTop: '15vh', zIndex: 200 }}>
+      <div onClick={e => e.stopPropagation()} style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '12px', width: '600px', boxShadow: '0 20px 60px rgba(0,0,0,0.6)', overflow: 'hidden' }}>
+        <div style={{ display: 'flex', alignItems: 'center', padding: '16px', borderBottom: `1px solid ${C.border}` }}>
+          <Search size={20} color={C.muted} style={{ marginRight: '12px' }} />
+          <input autoFocus placeholder="Type a command or search..." value={query} onChange={e => setQuery(e.target.value)} style={{ flex: 1, background: 'transparent', border: 'none', color: C.text, outline: 'none', fontSize: '16px' }} />
+          <span style={{ fontSize: '11px', backgroundColor: C.sidebar, padding: '2px 6px', borderRadius: '4px', color: C.muted, border: `1px solid ${C.border}` }}>ESC</span>
+        </div>
+        <div style={{ maxHeight: '300px', overflowY: 'auto', padding: '8px' }}>
+          {filtered.length === 0 ? <p style={{ padding: '20px', textAlign: 'center', color: C.muted, fontSize: '13px' }}>No results found.</p> : filtered.map((cmd, i) => (
+            <Link key={i} to={cmd.path} onClick={onClose} style={{ textDecoration: 'none' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 12px', borderRadius: '6px', cursor: 'pointer', color: C.text }} onMouseOver={e => e.currentTarget.style.backgroundColor = C.sidebar} onMouseOut={e => e.currentTarget.style.backgroundColor = 'transparent'}>
+                <div style={{ color: C.primary }}>{cmd.icon}</div>
+                <span style={{ fontSize: '14px' }}>{cmd.label}</span>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const DashboardLayout = ({ children, role, handleLogout, isHealthy, searchQuery, setSearchQuery, notifications, nodes, workloads }: any) => {
   const location = useLocation();
   const [showNotifications, setShowNotifications] = useState(false);
@@ -115,6 +155,7 @@ const DashboardLayout = ({ children, role, handleLogout, isHealthy, searchQuery,
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: C.sidebar, border: `1px solid ${C.border}`, padding: '6px 12px', borderRadius: '6px', width: '300px' }}>
                 <Search size={14} color={C.muted} />
                 <input type="text" placeholder="Search resources..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} style={{ background: 'transparent', border: 'none', color: C.text, outline: 'none', width: '100%', fontSize: '13px' }} />
+              <span style={{ fontSize: '11px', backgroundColor: C.card, padding: '2px 6px', borderRadius: '4px', color: C.muted, border: `1px solid ${C.border}`, whiteSpace: 'nowrap' }}>⌘K</span>
               </div>
               {searchQuery && hasResults && (
                 <div style={{ position: 'absolute', top: '40px', left: 0, width: '100%', backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '8px', zIndex: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.5)', maxHeight: '300px', overflowY: 'auto' }}>
@@ -184,6 +225,16 @@ function App() {
   const [sysStats, setSysStats] = useState<any>(null); const [isHealthy, setIsHealthy] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [notifications, setNotifications] = useState<string[]>([]);
+  const [isCmdOpen, setIsCmdOpen] = useState(false);
+
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); setIsCmdOpen(v => !v); }
+      if (e.key === 'Escape') setIsCmdOpen(false);
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, []);
 
   const getHeaders = () => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` });
   const fetchData = () => {
@@ -226,6 +277,7 @@ function App() {
 
   return (
     <BrowserRouter>
+      <CommandPalette isOpen={isCmdOpen} onClose={() => setIsCmdOpen(false)} />
       <DashboardLayout role={role} handleLogout={handleLogout} isHealthy={isHealthy} searchQuery={searchQuery} setSearchQuery={setSearchQuery} notifications={notifications} nodes={nodes} workloads={workloads}>
         <Routes>
           <Route path="/" element={<Overview nodes={nodes} workloads={workloads} isHealthy={isHealthy} sysStats={sysStats} searchQuery={searchQuery} />} />
@@ -326,7 +378,7 @@ const Overview = ({ nodes, workloads, isHealthy, sysStats, searchQuery }: any) =
             </div>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
               <thead><tr style={{ borderBottom: `1px solid ${C.border}`, color: C.muted }}>
-                <th style={{ padding: '12px 20px', fontWeight: '500' }}>Name</th><th style={{ padding: '12px 20px', fontWeight: '500' }}>Status</th><th style={{ padding: '12px 20px', fontWeight: '500' }}>Instance Type</th><th style={{ padding: '12px 20px', fontWeight: '500' }}>CPU</th><th style={{ padding: '12px 20px', fontWeight: '500' }}>Memory</th>
+                <th style={{ padding: '12px 20px', fontWeight: '500' }}>Name</th><th style={{ padding: '12px 20px', fontWeight: '500' }}>Status</th><th style={{ padding: '12px 20px', fontWeight: '500' }}>Instance Type</th><th style={{ padding: '12px 20px', fontWeight: '500' }}>CPU</th><th style={{ padding: '12px 20px', fontWeight: '500' }}>Memory</th><th style={{ padding: '12px 20px', fontWeight: '500' }}></th>
               </tr></thead>
               <tbody>
                 {filteredNodes.map((n: any) => (
@@ -336,6 +388,7 @@ const Overview = ({ nodes, workloads, isHealthy, sysStats, searchQuery }: any) =
                     <td style={{ padding: '12px 20px', color: C.muted }}>m6i.2xlarge</td>
                     <td style={{ padding: '12px 20px' }}><div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><span>{n.cpu_cores} Cores</span><div style={{ width: '40px', height: '4px', backgroundColor: C.border, borderRadius: '2px' }}><div style={{ width: '38%', height: '100%', background: C.primary, borderRadius: '2px' }}></div></div></div></td>
                     <td style={{ padding: '12px 20px' }}><div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><span>{n.memory_mb} MB</span><div style={{ width: '40px', height: '4px', backgroundColor: C.border, borderRadius: '2px' }}><div style={{ width: '61%', height: '100%', background: C.success, borderRadius: '2px' }}></div></div></div></td>
+                    <td style={{ padding: '12px 20px' }}><button style={{ background: 'none', border: `1px solid ${C.border}`, color: C.muted, padding: '4px 8px', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>View</button></td>
                   </tr>
                 ))}
               </tbody>
@@ -344,6 +397,33 @@ const Overview = ({ nodes, workloads, isHealthy, sysStats, searchQuery }: any) =
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+
+          <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '20px', marginBottom: '24px' }}>
+            <h2 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '600' }}>Quick Actions</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <Link to="/nodes" style={{ textDecoration: 'none' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px', borderRadius: '6px', backgroundColor: C.bg, border: `1px solid ${C.border}`, color: C.text, cursor: 'pointer', transition: 'background 0.2s' }} onMouseOver={e => e.currentTarget.style.backgroundColor = C.sidebar} onMouseOut={e => e.currentTarget.style.backgroundColor = C.bg}>
+                  <Plus size={16} color={C.primary} />
+                  <span style={{ fontSize: '13px', fontWeight: '500' }}>Add New Node</span>
+                  <ChevronRight size={14} color={C.muted} style={{ marginLeft: 'auto' }} />
+                </div>
+              </Link>
+              <Link to="/workloads" style={{ textDecoration: 'none' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px', borderRadius: '6px', backgroundColor: C.bg, border: `1px solid ${C.border}`, color: C.text, cursor: 'pointer', transition: 'background 0.2s' }} onMouseOver={e => e.currentTarget.style.backgroundColor = C.sidebar} onMouseOut={e => e.currentTarget.style.backgroundColor = C.bg}>
+                  <Play size={16} color={C.warning} />
+                  <span style={{ fontSize: '13px', fontWeight: '500' }}>Deploy Workload</span>
+                  <ChevronRight size={14} color={C.muted} style={{ marginLeft: 'auto' }} />
+                </div>
+              </Link>
+              <Link to="/security" style={{ textDecoration: 'none' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px', borderRadius: '6px', backgroundColor: C.bg, border: `1px solid ${C.border}`, color: C.text, cursor: 'pointer', transition: 'background 0.2s' }} onMouseOver={e => e.currentTarget.style.backgroundColor = C.sidebar} onMouseOut={e => e.currentTarget.style.backgroundColor = C.bg}>
+                  <Shield size={16} color={C.success} />
+                  <span style={{ fontSize: '13px', fontWeight: '500' }}>Security Center</span>
+                  <ChevronRight size={14} color={C.muted} style={{ marginLeft: 'auto' }} />
+                </div>
+              </Link>
+            </div>
+          </div>
           <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '20px' }}>
             <h2 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '600' }}>Resource Utilization (Live)</h2>
             <div style={{ marginBottom: '16px' }}>
