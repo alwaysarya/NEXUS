@@ -11,8 +11,19 @@ import NetworkingPage from './components/NetworkingPage';
 import StoragePage from './components/StoragePage';
 import CostPage from './components/CostPage';
 import AutomationPage from './components/AutomationPage';
+import LoginPage from './components/LoginPage';
 
 function App() {
+  const token = localStorage.getItem('nexus_token');
+
+  if (!token) {
+    return (
+      <Routes>
+        <Route path="*" element={<LoginPage />} />
+      </Routes>
+    );
+  }
+
   return (
     <div className="flex h-screen bg-background text-white overflow-hidden">
       <Sidebar />

@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"github.com/alwaysarya/nexus/services/control-plane/internal/api"
+	"github.com/alwaysarya/nexus/services/control-plane/internal/auth"
+	"github.com/alwaysarya/nexus/services/control-plane/internal/database"
 )
 
 func CORS(next http.Handler) http.Handler {
@@ -12,24 +15,44 @@ func CORS(next http.Handler) http.Handler {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-
 		if r.Method == "OPTIONS" {
 			w.WriteHeader(http.StatusOK)
 			return
 		}
+		next.ServeHTTP(w, r)
+	})
+}
 
+func AuthMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		authHeader := r.Header.Get("Authorization")
+		if authHeader == "" {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+		tokenString := strings.Replace(authHeader, "Bearer ", "", 1)
+		_, err := auth.ValidateToken(tokenString)
+		if err != nil {
+			http.Error(w, "Invalid token", http.StatusUnauthorized)
+			return
+		}
 		next.ServeHTTP(w, r)
 	})
 }
 
 func main() {
+	database.Connect() // Initialize DB
+
 	mux := http.NewServeMux()
-	
+	mux.HandleFunc("/api/login", api.LoginHandler)
+	mux.HandleFunc("/api/register", api.RegisterHandler) // Naya route
 	mux.HandleFunc("/api/health", api.CustomHealthHandler)
-	mux.HandleFunc("/api/nodes", api.CustomNodesHandler)
+
+	protectedMux := http.NewServeMux()
+	protectedMux.HandleFunc("/api/nodes", api.CustomNodesHandler)
+	mux.Handle("/api/nodes", AuthMiddleware(protectedMux))
 
 	handler := CORS(mux)
-
 	fmt.Println("🚀 Control Plane running on :8080")
 	log.Fatal(http.ListenAndServe(":8080", handler))
 }

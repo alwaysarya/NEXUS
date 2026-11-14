@@ -1,79 +1,71 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
-	"time"
-
 	"github.com/alwaysarya/nexus/services/control-plane/internal/auth"
-	"github.com/alwaysarya/nexus/services/control-plane/internal/node_registry"
-	"github.com/alwaysarya/nexus/services/control-plane/internal/storage"
-	"github.com/google/uuid"
+	"github.com/alwaysarya/nexus/services/control-plane/internal/database"
 	"golang.org/x/crypto/bcrypt"
 )
 
-type AuthHandler struct {
-	userRepo storage.UserRepository
+type LoginRequest struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
 }
 
-func NewAuthHandler(userRepo storage.UserRepository) *AuthHandler {
-	return &AuthHandler{userRepo: userRepo}
-}
-
-func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
-	var req struct {
-		Username string `json:"username"`
-		Password string `json:"password"`
-		Role     string `json:"role"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "invalid request", http.StatusBadRequest)
+func LoginHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
-	role := req.Role
-	if role == "" { role = "viewer" }
-
-	user := &node_registry.User{
-		ID: uuid.New(), Username: req.Username, PasswordHash: string(hashedPassword), Role: role, CreatedAt: time.Now(),
+	var req LoginRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Bad request", http.StatusBadRequest)
+		return
 	}
 
-	if err := h.userRepo.Create(r.Context(), user); err != nil {
-		http.Error(w, "user already exists", http.StatusBadRequest)
+	var dbID string
+	var dbHash string
+	var dbRole string
+	err := database.DB.QueryRow(context.Background(), 
+		"SELECT id, password_hash, role FROM users WHERE username=$1", req.Username).Scan(&dbID, &dbHash, &dbRole)
+	
+	if err != nil {
+		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		return
+	}
+
+	// Compare hashed password
+	if err := bcrypt.CompareHashAndPassword([]byte(dbHash), []byte(req.Password)); err != nil {
+		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		return
+	}
+
+	token, _ := auth.GenerateToken(req.Username, dbRole)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"token": token})
+}
+
+// Optional: Register handler to create first user
+func RegisterHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	var req LoginRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Bad request", http.StatusBadRequest)
+		return
+	}
+	hash, _ := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	_, err := database.DB.Exec(context.Background(), 
+		"INSERT INTO users (username, password_hash, role) VALUES ($1, $2, 'admin')", req.Username, string(hash))
+	if err != nil {
+		http.Error(w, "User already exists or DB error", http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(map[string]string{"message": "user created successfully"})
-}
-
-func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
-	var req struct {
-		Username string `json:"username"`
-		Password string `json:"password"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "invalid request", http.StatusBadRequest)
-		return
-	}
-
-	user, err := h.userRepo.GetByUsername(r.Context(), req.Username)
-	if err != nil {
-		http.Error(w, "invalid credentials", http.StatusUnauthorized)
-		return
-	}
-
-	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)); err != nil {
-		http.Error(w, "invalid credentials", http.StatusUnauthorized)
-		return
-	}
-
-	tokenString, err := auth.GenerateToken(user.Username, user.Role)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"token": tokenString})
+	w.Write([]byte(`{"message":"User created successfully"}`))
 }
