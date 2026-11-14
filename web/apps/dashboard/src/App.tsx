@@ -62,10 +62,24 @@ function App() {
     }).then(() => fetchNodes());
   };
 
+  const totalNodes = nodes.length;
+  const activeNodes = nodes.filter(n => n.status === 'active').length;
+
   return (
     <div style={{ padding: '20px', fontFamily: 'sans-serif' }}>
       <h1>NEXUS Dashboard</h1>
       
+      <div style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
+        <div style={{ padding: '15px', border: '1px solid #ccc', borderRadius: '5px', width: '150px' }}>
+          <h4>Total Nodes</h4>
+          <h2>{totalNodes}</h2>
+        </div>
+        <div style={{ padding: '15px', border: '1px solid #ccc', borderRadius: '5px', width: '150px' }}>
+          <h4>Active Nodes</h4>
+          <h2 style={{ color: 'green' }}>{activeNodes}</h2>
+        </div>
+      </div>
+
       <div style={{ marginBottom: '20px', padding: '15px', border: '1px solid #ccc', width: '300px' }}>
         <h3>Register New Node</h3>
         <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
