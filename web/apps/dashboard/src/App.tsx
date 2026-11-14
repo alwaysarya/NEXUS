@@ -47,6 +47,21 @@ function App() {
     });
   };
 
+  const handleDelete = (id: string) => {
+    if (confirm('Are you sure you want to delete this node?')) {
+      fetch(`/api/v1/nodes/${id}`, { method: 'DELETE' }).then(() => fetchNodes());
+    }
+  };
+
+  const handleToggleStatus = (id: string, currentStatus: string) => {
+    const newStatus = currentStatus === 'active' ? 'pending' : 'active';
+    fetch(`/api/v1/nodes/${id}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: newStatus })
+    }).then(() => fetchNodes());
+  };
+
   return (
     <div style={{ padding: '20px', fontFamily: 'sans-serif' }}>
       <h1>NEXUS Dashboard</h1>
@@ -62,7 +77,7 @@ function App() {
         </form>
       </div>
 
-      <table border={1} cellPadding={10} style={{ borderCollapse: 'collapse' }}>
+      <table border={1} cellPadding={10} style={{ borderCollapse: 'collapse', width: '100%' }}>
         <thead>
           <tr>
             <th>Hostname</th>
@@ -70,6 +85,7 @@ function App() {
             <th>Status</th>
             <th>CPU Cores</th>
             <th>Memory (MB)</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -82,6 +98,14 @@ function App() {
               </td>
               <td>{node.cpu_cores}</td>
               <td>{node.memory_mb}</td>
+              <td>
+                <button onClick={() => handleToggleStatus(node.id, node.status)} style={{ marginRight: '10px' }}>
+                  {node.status === 'active' ? 'Mark Pending' : 'Mark Active'}
+                </button>
+                <button onClick={() => handleDelete(node.id)} style={{ color: 'red' }}>
+                  Delete
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>

@@ -61,3 +61,9 @@ func (r *postgresNodeRepo) List(ctx context.Context) ([]*node_registry.Node, err
 	}
 	return nodes, nil
 }
+
+func (r *postgresNodeRepo) Delete(ctx context.Context, id uuid.UUID) error {
+	query := `DELETE FROM nodes WHERE id = $1`
+	_, err := r.db.ExecContext(ctx, query, id)
+	return err
+}
