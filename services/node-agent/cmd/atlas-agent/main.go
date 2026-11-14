@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"runtime"
 	"time"
 
@@ -45,10 +46,18 @@ func main() {
 	if err != nil { log.Fatalf("❌ Failed to connect to Docker: %v", err) }
 	fmt.Println("🐳 Connected to Docker daemon")
 
+	// Environment Variables for Multi-Node Setup
+	hostname := os.Getenv("NODE_HOSTNAME")
+	if hostname == "" { hostname = "agent-node-mac" }
+	nodeIP := os.Getenv("NODE_IP")
+	if nodeIP == "" { nodeIP = "127.0.0.1" }
+	controlPlaneURL := os.Getenv("CONTROL_PLANE_URL")
+	if controlPlaneURL == "" { controlPlaneURL = "http://localhost:8080" }
+
 	// 1. Login
-	loginPayload := map[string]string{"username": "admin", "password": "admin123"}
+	loginPayload := map[string]string{"username": "admin_nexus", "password": "nexus123"}
 	loginJSON, _ := json.Marshal(loginPayload)
-	respLogin, _ := http.Post("http://localhost:8080/api/v1/login", "application/json", bytes.NewBuffer(loginJSON))
+	respLogin, _ := http.Post(controlPlaneURL+"/api/v1/login", "application/json", bytes.NewBuffer(loginJSON))
 	var loginResult map[string]string
 	json.NewDecoder(respLogin.Body).Decode(&loginResult)
 	authToken = loginResult["token"]
@@ -56,8 +65,7 @@ func main() {
 	fmt.Println("🔑 Logged in successfully")
 
 	// 2. Check existing nodes
-	hostname := "agent-node-mac"
-	nodesResp, _ := authReq("GET", "http://localhost:8080/api/v1/nodes", nil)
+	nodesResp, _ := authReq("GET", controlPlaneURL+"/api/v1/nodes", nil)
 	var nodes []map[string]interface{}
 	json.NewDecoder(nodesResp.Body).Decode(&nodes)
 	nodesResp.Body.Close()
@@ -73,11 +81,11 @@ func main() {
 	// 3. Register if not found
 	if registeredNodeID == "" {
 		cpuCores := runtime.NumCPU()
-		payload := NodePayload{Hostname: hostname, IPAddress: "127.0.0.1", CPUCores: cpuCores, MemoryMB: 16384}
+		payload := NodePayload{Hostname: hostname, IPAddress: nodeIP, CPUCores: cpuCores, MemoryMB: 16384}
 		jsonData, _ := json.Marshal(payload)
 		
-		fmt.Println("Registering new node with Control Plane...")
-		resp, err := authReq("POST", "http://localhost:8080/api/v1/nodes", bytes.NewBuffer(jsonData))
+		fmt.Printf("Registering new node (%s) with Control Plane...\n", hostname)
+		resp, err := authReq("POST", controlPlaneURL+"/api/v1/nodes", bytes.NewBuffer(jsonData))
 		if err != nil || resp.StatusCode != http.StatusCreated {
 			log.Fatalf("❌ Failed to register. Status: %v", resp.StatusCode)
 		}
@@ -94,13 +102,13 @@ func main() {
 		time.Sleep(10 * time.Second)
 		
 		statusJSON, _ := json.Marshal(map[string]string{"status": "active"})
-		res, _ := authReq(http.MethodPatch, fmt.Sprintf("http://localhost:8080/api/v1/nodes/%s/status", registeredNodeID), bytes.NewBuffer(statusJSON))
+		res, _ := authReq(http.MethodPatch, fmt.Sprintf("%s/api/v1/nodes/%s/status", controlPlaneURL, registeredNodeID), bytes.NewBuffer(statusJSON))
 		if res != nil { 
 			if res.StatusCode == 200 { fmt.Println("💓 Heartbeat sent (status: active)") }
 			res.Body.Close() 
 		}
 
-		wlResp, err := authReq("GET", fmt.Sprintf("http://localhost:8080/api/v1/nodes/%s/workloads", registeredNodeID), nil)
+		wlResp, err := authReq("GET", fmt.Sprintf("%s/api/v1/nodes/%s/workloads", controlPlaneURL, registeredNodeID), nil)
 		if err == nil && wlResp.StatusCode == 200 {
 			var workloads []map[string]interface{}
 			json.NewDecoder(wlResp.Body).Decode(&workloads)

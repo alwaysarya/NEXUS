@@ -28,7 +28,6 @@ func main() {
 	nodeRepo := storage.NewPostgresNodeRepository(db)
 	workloadRepo := storage.NewPostgresWorkloadRepository(db)
 	userRepo := storage.NewPostgresUserRepository(db)
-	
 	sched := scheduler.NewScheduler(nodeRepo, workloadRepo)
 
 	nodeHandlers := api.NewHandlers(nodeRepo)
@@ -36,9 +35,10 @@ func main() {
 	authHandler := api.NewAuthHandler(userRepo)
 	healthHandler := api.NewHealthHandler(db)
 	metricsHandler := api.NewMetricsHandler()
+	agentHandler := api.NewAgentHandler()
 
 	mux := http.NewServeMux()
-	api.RegisterRoutes(mux, nodeHandlers, workloadHandlers, authHandler, healthHandler, metricsHandler)
+	api.RegisterRoutes(mux, nodeHandlers, workloadHandlers, authHandler, healthHandler, metricsHandler, agentHandler)
 
 	port := ":8080"
 	fmt.Printf("Atlas Control Plane running on %s\n", port)
