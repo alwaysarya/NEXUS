@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/alwaysarya/nexus/services/control-plane/internal/api"
+	"github.com/alwaysarya/nexus/services/control-plane/internal/scheduler"
 	"github.com/alwaysarya/nexus/services/control-plane/internal/storage"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
@@ -15,7 +16,7 @@ import (
 func main() {
 	dbURL := os.Getenv("DATABASE_URL")
 	if dbURL == "" {
-		dbURL = "postgres://postgres:postgres@localhost:5432/nexus?sslmode=disable"
+		dbURL = "postgres://atlas:atlas@localhost:5432/nexus?sslmode=disable"
 	}
 
 	db, err := sql.Open("pgx", dbURL)
@@ -30,11 +31,20 @@ func main() {
 		log.Println("Connected to database")
 	}
 
-	repo := storage.NewPostgresNodeRepository(db)
-	handlers := api.NewHandlers(repo)
+	// Initialize Repositories
+	nodeRepo := storage.NewPostgresNodeRepository(db)
+	workloadRepo := storage.NewPostgresWorkloadRepository(db)
 
+	// Initialize Scheduler
+	sched := scheduler.NewScheduler(nodeRepo, workloadRepo)
+
+	// Initialize Handlers
+	nodeHandlers := api.NewHandlers(nodeRepo)
+	workloadHandlers := api.NewWorkloadHandler(workloadRepo, sched)
+
+	// Setup Routes
 	mux := http.NewServeMux()
-	api.RegisterRoutes(mux, handlers)
+	api.RegisterRoutes(mux, nodeHandlers, workloadHandlers)
 
 	port := ":8080"
 	fmt.Printf("Atlas Control Plane running on %s\n", port)
