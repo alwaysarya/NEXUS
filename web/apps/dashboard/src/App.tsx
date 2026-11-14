@@ -504,6 +504,27 @@ const Overview = ({ nodes, workloads, isHealthy, sysStats, searchQuery, chartDat
               </Link>
             </div>
           </div>
+
+          <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '20px', marginBottom: '24px', background: 'linear-gradient(135deg, rgba(99,102,241,0.1) 0%, transparent 100%)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h2 style={{ margin: 0, fontSize: '16px', fontWeight: '600' }}>Estimated Cost</h2>
+              <span style={{ fontSize: '11px', backgroundColor: C.bg, padding: '2px 8px', borderRadius: '4px', color: C.muted, border: `1px solid ${C.border}` }}>Monthly</span>
+            </div>
+            <h1 style={{ margin: '0 0 4px 0', fontSize: '32px', fontWeight: '700' }}>${(nodes.length * 45 + workloads.length * 12).toFixed(2)}</h1>
+            <p style={{ margin: '0 0 16px 0', fontSize: '12px', color: C.muted }}>Next invoice: Dec 15, 2024</p>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: C.muted, marginBottom: '8px' }}>
+              <span>Compute ({nodes.length} nodes)</span>
+              <span style={{ color: C.text }}>${(nodes.length * 45).toFixed(2)}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: C.muted, marginBottom: '8px' }}>
+              <span>Workloads ({workloads.length})</span>
+              <span style={{ color: C.text }}>${(workloads.length * 12).toFixed(2)}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: C.muted, paddingTop: '8px', borderTop: `1px solid ${C.border}` }}>
+              <span>Estimated savings</span>
+              <span style={{ color: C.success }}>-$0.00</span>
+            </div>
+          </div>
           <div style={{ backgroundColor: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '20px' }}>
             <h2 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '600' }}>Resource Utilization (Live)</h2>
             <div style={{ marginBottom: '16px' }}>
