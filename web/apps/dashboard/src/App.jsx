@@ -5,6 +5,7 @@ import ClustersPage from './components/ClustersPage';
 import DeploymentsPage from './components/DeploymentsPage';
 import SecurityPage from './components/SecurityPage';
 import ObservabilityPage from './components/ObservabilityPage';
+import OverviewPage from './components/OverviewPage';
 
 function App() {
   return (
@@ -14,7 +15,8 @@ function App() {
         <Header />
         <main className="flex-1 overflow-hidden">
           <Routes>
-            <Route path="/" element={<Navigate to="/clusters" replace />} />
+            <Route path="/" element={<Navigate to="/overview" replace />} />
+            <Route path="/overview" element={<OverviewPage />} />
             <Route path="/clusters" element={<ClustersPage />} />
             <Route path="/deployments" element={<DeploymentsPage />} />
             <Route path="/security" element={<SecurityPage />} />

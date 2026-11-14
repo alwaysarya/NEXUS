@@ -1,8 +1,15 @@
-import { LayoutDashboard, Box, Layers, Network, Database, Activity, Shield, DollarSign, Terminal, ChevronDown, Boxes } from 'lucide-react';
+import { useState } from 'react';
+import { LayoutDashboard, Box, Layers, Network, Database, Activity, Shield, DollarSign, Terminal, ChevronDown, Boxes, ChevronRight } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
 export default function Sidebar() {
   const location = useLocation();
+  const [expandedMenus, setExpandedMenus] = useState({ Observability: false, Security: false });
+
+  const toggleMenu = (label) => {
+    setExpandedMenus(prev => ({ ...prev, [label]: !prev[label] }));
+  };
+
   const navItems = [
     { icon: LayoutDashboard, label: 'Overview', path: '/overview' },
     { icon: Boxes, label: 'Clusters', path: '/clusters' },
@@ -10,8 +17,27 @@ export default function Sidebar() {
     { icon: Layers, label: 'Deployments', path: '/deployments' },
     { icon: Network, label: 'Networking', path: '/networking' },
     { icon: Database, label: 'Storage', path: '/storage' },
-    { icon: Activity, label: 'Observability', hasDropdown: true, path: '/observability' },
-    { icon: Shield, label: 'Security', hasDropdown: true, path: '/security' },
+    { 
+      icon: Activity, 
+      label: 'Observability', 
+      hasDropdown: true, 
+      path: '/observability',
+      subItems: [
+        { label: 'Metrics', path: '/observability' },
+        { label: 'Logs', path: '/observability' },
+        { label: 'Traces', path: '/observability' },
+        { label: 'Alerts', path: '/observability', badge: 3 }
+      ]
+    },
+    { 
+      icon: Shield, 
+      label: 'Security', 
+      hasDropdown: true, 
+      path: '/security',
+      subItems: [
+        { label: 'Access & RBAC', path: '/security' }
+      ]
+    },
     { icon: DollarSign, label: 'Cost & Usage', path: '/cost' },
     { icon: Terminal, label: 'Automation', path: '/automation' },
   ];
@@ -26,23 +52,60 @@ export default function Sidebar() {
       </div>
 
       <div className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-        {navItems.map((item) => (
-          <Link
-            key={item.label}
-            to={item.path}
-            className={`flex items-center justify-between px-3 py-2 rounded-md cursor-pointer text-sm ${
-              location.pathname === item.path || (location.pathname === '/' && item.path === '/clusters')
-                ? 'bg-primary/10 text-primary font-medium' 
-                : 'text-gray-400 hover:text-white hover:bg-white/5'
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <item.icon size={18} />
-              <span>{item.label}</span>
+        {navItems.map((item) => {
+          const isActive = location.pathname === item.path;
+          const isExpanded = expandedMenus[item.label];
+
+          return (
+            <div key={item.label}>
+              {item.hasDropdown ? (
+                <div 
+                  onClick={() => toggleMenu(item.label)}
+                  className={`flex items-center justify-between px-3 py-2 rounded-md cursor-pointer text-sm ${
+                    isActive ? 'bg-primary/10 text-primary font-medium' : 'text-gray-400 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <item.icon size={18} />
+                    <span>{item.label}</span>
+                  </div>
+                  <ChevronDown size={14} className={`transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                </div>
+              ) : (
+                <Link
+                  to={item.path}
+                  className={`flex items-center justify-between px-3 py-2 rounded-md cursor-pointer text-sm ${
+                    isActive ? 'bg-primary/10 text-primary font-medium' : 'text-gray-400 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <item.icon size={18} />
+                    <span>{item.label}</span>
+                  </div>
+                </Link>
+              )}
+
+              {/* Sub-menu items */}
+              {item.hasDropdown && isExpanded && (
+                <div className="ml-4 pl-4 border-l border-border mt-1 space-y-1">
+                  {item.subItems.map((sub) => (
+                    <Link
+                      key={sub.label}
+                      to={sub.path}
+                      className="flex items-center justify-between px-2 py-1.5 rounded text-sm text-gray-400 hover:text-white hover:bg-white/5"
+                    >
+                      <div className="flex items-center gap-2">
+                        <ChevronRight size={12} className="text-gray-600" />
+                        <span>{sub.label}</span>
+                      </div>
+                      {sub.badge && <span className="bg-primary text-white text-[10px] px-1.5 rounded-full">{sub.badge}</span>}
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
-            {item.hasDropdown && <ChevronDown size={14} />}
-          </Link>
-        ))}
+          );
+        })}
       </div>
 
       <div className="p-4 border-t border-border">
