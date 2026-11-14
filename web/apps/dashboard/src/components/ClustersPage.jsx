@@ -1,21 +1,27 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronRight, RefreshCw, MoreHorizontal, ZoomIn, ZoomOut, Plus, Download, Network, Server } from 'lucide-react';
 import MetricCard from './ui/MetricCard';
 import PodPanel from './ui/PodPanel';
+import { fetchNodes } from '../services/api';
 
 export default function ClustersPage() {
   const [activeTab, setActiveTab] = useState('Overview');
+  const [nodes, setNodes] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const nodes = [
-    { name: 'ip-10-0-1-23', status: 'Ready', zone: 'us-east-1a', type: 'm6i.2xlarge', cpu: '38%', mem: '61%', pods: '14 / 32', age: '4 mo' },
-    { name: 'ip-10-0-1-24', status: 'Ready', zone: 'us-east-1a', type: 'm6i.2xlarge', cpu: '41%', mem: '63%', pods: '13 / 32', age: '4 mo' },
-    { name: 'ip-10-0-1-25', status: 'Ready', zone: 'us-east-1a', type: 'm6i.2xlarge', cpu: '36%', mem: '58%', pods: '12 / 32', age: '4 mo' },
-    { name: 'ip-10-0-1-26', status: 'Ready', zone: 'us-east-1a', type: 'm6i.2xlarge', cpu: '44%', mem: '67%', pods: '13 / 32', age: '4 mo' },
-    { name: 'ip-10-0-2-17', status: 'Ready', zone: 'us-east-1b', type: 'm6i.2xlarge', cpu: '40%', mem: '69%', pods: '12 / 32', age: '4 mo' },
-    { name: 'ip-10-0-2-18', status: 'Ready', zone: 'us-east-1b', type: 'm6i.2xlarge', cpu: '46%', mem: '72%', pods: '14 / 32', age: '4 mo' },
-    { name: 'ip-10-0-2-19', status: 'Ready', zone: 'us-east-1b', type: 'm6i.2xlarge', cpu: '43%', mem: '66%', pods: '12 / 32', age: '4 mo' },
-    { name: 'ip-10-0-2-20', status: 'NotReady', zone: 'us-east-1b', type: 'm6i.2xlarge', cpu: '-', mem: '-', pods: '0 / 32', age: '12 min' },
-  ];
+  useEffect(() => {
+    const loadNodes = async () => {
+      try {
+        const data = await fetchNodes();
+        setNodes(data);
+      } catch (error) {
+        console.error("Failed to fetch nodes", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadNodes();
+  }, []);
 
   return (
     <div className="flex h-full w-full">
@@ -128,7 +134,7 @@ export default function ClustersPage() {
           </div>
         )}
 
-        {/* Nodes Table (Only if activeTab is Overview or Nodes) */}
+        {/* Nodes Table */}
         {(activeTab === 'Overview' || activeTab === 'Nodes') && (
           <div className="bg-surface border border-border rounded-xl flex flex-col mt-4">
             <div className="flex items-center justify-between p-4 border-b border-border">
@@ -155,22 +161,28 @@ export default function ClustersPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {nodes.map((node, i) => (
-                  <tr key={i} className="hover:bg-white/5">
-                    <td className="px-4 py-2.5 text-white">{node.name}</td>
-                    <td className="px-4 py-2.5">
-                      <span className={`flex items-center gap-1.5 text-xs ${node.status === 'Ready' ? 'text-green-500' : 'text-yellow-500'}`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${node.status === 'Ready' ? 'bg-green-500' : 'bg-yellow-500'}`}></span> {node.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-2.5">{node.zone}</td>
-                    <td className="px-4 py-2.5">{node.type}</td>
-                    <td className="px-4 py-2.5">{node.cpu}</td>
-                    <td className="px-4 py-2.5">{node.mem}</td>
-                    <td className="px-4 py-2.5">{node.pods}</td>
-                    <td className="px-4 py-2.5">{node.age}</td>
-                  </tr>
-                ))}
+                {loading ? (
+                  <tr><td colSpan="8" className="text-center py-4 text-gray-500">Loading...</td></tr>
+                ) : nodes.length === 0 ? (
+                  <tr><td colSpan="8" className="text-center py-4 text-gray-500">No nodes found.</td></tr>
+                ) : (
+                  nodes.map((node, i) => (
+                    <tr key={i} className="hover:bg-white/5">
+                      <td className="px-4 py-2.5 text-white">{node.name}</td>
+                      <td className="px-4 py-2.5">
+                        <span className={`flex items-center gap-1.5 text-xs ${node.status === 'Ready' ? 'text-green-500' : 'text-yellow-500'}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${node.status === 'Ready' ? 'bg-green-500' : 'bg-yellow-500'}`}></span> {node.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2.5">{node.zone}</td>
+                      <td className="px-4 py-2.5">{node.instanceType}</td>
+                      <td className="px-4 py-2.5">{node.cpu}%</td>
+                      <td className="px-4 py-2.5">{node.memory}%</td>
+                      <td className="px-4 py-2.5">{node.pods}</td>
+                      <td className="px-4 py-2.5">{node.age}</td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
