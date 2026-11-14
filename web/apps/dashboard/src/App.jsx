@@ -6,6 +6,9 @@ import DeploymentsPage from './components/DeploymentsPage';
 import SecurityPage from './components/SecurityPage';
 import ObservabilityPage from './components/ObservabilityPage';
 import OverviewPage from './components/OverviewPage';
+import WorkloadsPage from './components/WorkloadsPage';
+import NetworkingPage from './components/NetworkingPage';
+import StoragePage from './components/StoragePage';
 
 function App() {
   return (
@@ -18,9 +21,12 @@ function App() {
             <Route path="/" element={<Navigate to="/overview" replace />} />
             <Route path="/overview" element={<OverviewPage />} />
             <Route path="/clusters" element={<ClustersPage />} />
+            <Route path="/workloads" element={<WorkloadsPage />} />
             <Route path="/deployments" element={<DeploymentsPage />} />
-            <Route path="/security" element={<SecurityPage />} />
+            <Route path="/networking" element={<NetworkingPage />} />
+            <Route path="/storage" element={<StoragePage />} />
             <Route path="/observability" element={<ObservabilityPage />} />
+            <Route path="/security" element={<SecurityPage />} />
             <Route path="*" element={<div className="p-6 text-gray-400">Page Under Construction</div>} />
           </Routes>
         </main>

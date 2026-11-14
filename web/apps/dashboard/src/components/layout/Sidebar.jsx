@@ -23,10 +23,10 @@ export default function Sidebar() {
       hasDropdown: true, 
       path: '/observability',
       subItems: [
-        { label: 'Metrics', path: '/observability' },
-        { label: 'Logs', path: '/observability' },
-        { label: 'Traces', path: '/observability' },
-        { label: 'Alerts', path: '/observability', badge: 3 }
+        { label: 'Metrics', path: '/observability?tab=metrics' },
+        { label: 'Logs', path: '/observability?tab=logs' },
+        { label: 'Traces', path: '/observability?tab=traces' },
+        { label: 'Alerts', path: '/observability?tab=alerts', badge: 3 }
       ]
     },
     { 
@@ -35,7 +35,7 @@ export default function Sidebar() {
       hasDropdown: true, 
       path: '/security',
       subItems: [
-        { label: 'Access & RBAC', path: '/security' }
+        { label: 'Access & RBAC', path: '/security?tab=rbac' }
       ]
     },
     { icon: DollarSign, label: 'Cost & Usage', path: '/cost' },
@@ -59,17 +59,14 @@ export default function Sidebar() {
           return (
             <div key={item.label}>
               {item.hasDropdown ? (
-                <div 
-                  onClick={() => toggleMenu(item.label)}
-                  className={`flex items-center justify-between px-3 py-2 rounded-md cursor-pointer text-sm ${
-                    isActive ? 'bg-primary/10 text-primary font-medium' : 'text-gray-400 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
+                <div className="flex items-center justify-between px-3 py-2 rounded-md cursor-pointer text-sm text-gray-400 hover:text-white hover:bg-white/5">
+                  <Link to={item.path} className="flex items-center gap-3 flex-1">
                     <item.icon size={18} />
                     <span>{item.label}</span>
+                  </Link>
+                  <div onClick={() => toggleMenu(item.label)} className="p-1">
+                    <ChevronDown size={14} className={`transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
                   </div>
-                  <ChevronDown size={14} className={`transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
                 </div>
               ) : (
                 <Link
