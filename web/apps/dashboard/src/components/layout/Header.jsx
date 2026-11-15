@@ -1,43 +1,63 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Search, Bell, HelpCircle, ChevronDown, Menu } from 'lucide-react';
 
 export default function Header({ toggleSidebar }) {
   const [showProject, setShowProject] = useState(false);
   const [showRegion, setShowRegion] = useState(false);
+  
+  const projectRef = useRef(null);
+  const regionRef = useRef(null);
+
+  // Bahar click karne par dropdown band karne ka logic
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (projectRef.current && !projectRef.current.contains(event.target)) {
+        setShowProject(false);
+      }
+      if (regionRef.current && !regionRef.current.contains(event.target)) {
+        setShowRegion(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   return (
     <header className="h-16 bg-background border-b border-border flex items-center justify-between px-4 md:px-6 relative z-50">
       <div className="flex items-center gap-4">
-        {/* Mobile Hamburger Menu */}
         <button onClick={toggleSidebar} className="md:hidden text-gray-400 hover:text-white">
           <Menu size={24} />
         </button>
 
         <div className="hidden md:flex items-center gap-6">
           {/* Project Dropdown */}
-          <div className="relative">
+          <div className="relative" ref={projectRef}>
             <button onClick={() => setShowProject(!showProject)} className="flex items-center gap-2 text-sm text-gray-300 hover:text-white">
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              Production <ChevronDown size={14} />
+              Production <ChevronDown size={14} className={`transition-transform ${showProject ? 'rotate-180' : ''}`} />
             </button>
             {showProject && (
-              <div className="absolute top-8 left-0 w-40 bg-surface border border-border rounded-md shadow-lg py-1">
-                <div className="px-3 py-1.5 text-sm text-white bg-white/5 cursor-pointer">Production</div>
-                <div className="px-3 py-1.5 text-sm text-gray-400 hover:bg-white/5 cursor-pointer">Staging</div>
+              <div className="absolute top-10 left-0 w-40 bg-surface border border-border rounded-md shadow-xl py-1 z-[100]">
+                <div className="px-3 py-1.5 text-sm text-white bg-white/5 cursor-pointer hover:bg-white/10" onClick={() => setShowProject(false)}>Production</div>
+                <div className="px-3 py-1.5 text-sm text-gray-400 hover:bg-white/5 cursor-pointer" onClick={() => setShowProject(false)}>Staging</div>
+                <div className="px-3 py-1.5 text-sm text-gray-400 hover:bg-white/5 cursor-pointer" onClick={() => setShowProject(false)}>Development</div>
               </div>
             )}
           </div>
 
           {/* Region Dropdown */}
-          <div className="relative">
+          <div className="relative" ref={regionRef}>
             <button onClick={() => setShowRegion(!showRegion)} className="flex items-center gap-2 text-sm text-gray-300 hover:text-white">
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              us-east-1 (N. Virginia) <ChevronDown size={14} />
+              us-east-1 (N. Virginia) <ChevronDown size={14} className={`transition-transform ${showRegion ? 'rotate-180' : ''}`} />
             </button>
             {showRegion && (
-              <div className="absolute top-8 left-0 w-56 bg-surface border border-border rounded-md shadow-lg py-1">
-                <div className="px-3 py-1.5 text-sm text-white bg-white/5 cursor-pointer">us-east-1 (N. Virginia)</div>
-                <div className="px-3 py-1.5 text-sm text-gray-400 hover:bg-white/5 cursor-pointer">us-west-2 (Oregon)</div>
+              <div className="absolute top-10 left-0 w-56 bg-surface border border-border rounded-md shadow-xl py-1 z-[100]">
+                <div className="px-3 py-1.5 text-sm text-white bg-white/5 cursor-pointer hover:bg-white/10" onClick={() => setShowRegion(false)}>us-east-1 (N. Virginia)</div>
+                <div className="px-3 py-1.5 text-sm text-gray-400 hover:bg-white/5 cursor-pointer" onClick={() => setShowRegion(false)}>us-west-2 (Oregon)</div>
+                <div className="px-3 py-1.5 text-sm text-gray-400 hover:bg-white/5 cursor-pointer" onClick={() => setShowRegion(false)}>eu-west-1 (Ireland)</div>
               </div>
             )}
           </div>
