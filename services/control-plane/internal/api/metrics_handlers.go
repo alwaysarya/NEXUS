@@ -15,18 +15,21 @@ import (
 func RealMetricsHandler(w http.ResponseWriter, r *http.Request) {
 	env := r.URL.Query().Get("env")
 	if env == "" { env = "production" }
+	region := r.URL.Query().Get("region")
+	if region == "" { region = "us-east-1" }
 
 	cpuPercent, _ := cpu.Percent(0, false)
 	vmStat, _ := mem.VirtualMemory()
 	hostInfo, _ := host.Info()
 
-	// Agar Staging hai, toh thoda alag data dikhao (simulate)
 	displayCPU := cpuPercent[0]
 	displayMem := vmStat.UsedPercent
 	displayHost := hostInfo.Platform
+	displayUptime := hostInfo.Uptime
 
+	// Environment Logic
 	if env == "staging" {
-		displayCPU = cpuPercent[0] * 0.5 // Staging uses half resources
+		displayCPU = cpuPercent[0] * 0.5
 		displayMem = vmStat.UsedPercent * 0.8
 		displayHost = hostInfo.Platform + " (Staging)"
 	} else if env == "development" {
@@ -35,24 +38,29 @@ func RealMetricsHandler(w http.ResponseWriter, r *http.Request) {
 		displayHost = hostInfo.Platform + " (Dev)"
 	}
 
+	// Region Logic (Simulation)
+	if region == "us-west-2" {
+		displayCPU = displayCPU * 1.1 // Thoda zyada load
+		displayUptime = displayUptime - 3600 // 1 ghanta kam uptime
+	} else if region == "eu-west-1" {
+		displayCPU = displayCPU * 0.9 // Thoda kam load
+		displayUptime = displayUptime - 7200 // 2 ghante kam uptime
+	}
+
 	metrics := map[string]interface{}{
 		"cpu": map[string]interface{}{"usage": displayCPU, "cores": len(cpuPercent)},
 		"memory": map[string]interface{}{"total": vmStat.Total, "used": vmStat.Used, "usage_percent": displayMem},
-		"host": map[string]interface{}{"os": hostInfo.OS, "platform": displayHost, "uptime": hostInfo.Uptime},
+		"host": map[string]interface{}{"os": hostInfo.OS, "platform": displayHost, "uptime": displayUptime},
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(metrics)
 }
 
 // ... (baaki handlers waise hi rahenge)
-
 func NetworkMetricsHandler(w http.ResponseWriter, r *http.Request) {
 	netIO, _ := net.IOCounters(false)
 	var bytesSent, bytesRecv uint64
-	if len(netIO) > 0 {
-		bytesSent = netIO[0].BytesSent
-		bytesRecv = netIO[0].BytesRecv
-	}
+	if len(netIO) > 0 { bytesSent = netIO[0].BytesSent; bytesRecv = netIO[0].BytesRecv }
 	conns, _ := net.Connections("all")
 	netData := map[string]interface{}{"bytes_sent": bytesSent, "bytes_recv": bytesRecv, "active_connections": len(conns)}
 	w.Header().Set("Content-Type", "application/json")
@@ -65,9 +73,7 @@ func StorageMetricsHandler(w http.ResponseWriter, r *http.Request) {
 	var disks []map[string]interface{}
 	for _, p := range partitions {
 		usage, _ := disk.Usage(p.Mountpoint)
-		if usage.Total > 0 {
-			disks = append(disks, map[string]interface{}{"path": p.Mountpoint, "total": usage.Total, "used": usage.Used, "free": usage.Free, "used_percent": usage.UsedPercent})
-		}
+		if usage.Total > 0 { disks = append(disks, map[string]interface{}{"path": p.Mountpoint, "total": usage.Total, "used": usage.Used, "free": usage.Free, "used_percent": usage.UsedPercent}) }
 	}
 	storageData := map[string]interface{}{"total": diskStat.Total, "used": diskStat.Used, "free": diskStat.Free, "used_percent": diskStat.UsedPercent, "volumes": disks}
 	w.Header().Set("Content-Type", "application/json")
