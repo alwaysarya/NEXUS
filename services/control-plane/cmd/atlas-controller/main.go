@@ -58,7 +58,8 @@ func main() {
 	protectedMux.HandleFunc("/api/automation-metrics", api.AutomationMetricsHandler)
 	protectedMux.HandleFunc("/api/traces-metrics", api.TracesMetricsHandler)
 	protectedMux.HandleFunc("/api/alerts-metrics", api.AlertsMetricsHandler)
-	protectedMux.HandleFunc("/api/security-metrics", api.SecurityMetricsHandler) // Naya security route
+	protectedMux.HandleFunc("/api/security-metrics", api.SecurityMetricsHandler)
+	protectedMux.HandleFunc("/api/cost-metrics", api.CostMetricsHandler)
 	mux.Handle("/api/", AuthMiddleware(protectedMux))
 
 	handler := CORS(mux)

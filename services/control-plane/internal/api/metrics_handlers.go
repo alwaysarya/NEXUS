@@ -179,3 +179,22 @@ func SecurityMetricsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(securityData)
 }
+
+func CostMetricsHandler(w http.ResponseWriter, r *http.Request) {
+	vmStat, _ := mem.VirtualMemory()
+	diskStat, _ := disk.Usage("/")
+	
+	// Simulated Cost Calculation
+	computeCost := (vmStat.UsedPercent / 100) * 500
+	storageCost := (diskStat.UsedPercent / 100) * 200
+	netCost := 150.00
+	
+	costData := map[string]interface{}{
+		"compute": computeCost,
+		"storage": storageCost,
+		"network": netCost,
+		"total":   computeCost + storageCost + netCost,
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(costData)
+}

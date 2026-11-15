@@ -23,4 +23,5 @@ export const fetchAutomationMetrics = async () => (await api.get('/automation-me
 export const fetchTracesMetrics = async () => (await api.get('/traces-metrics')).data;
 export const fetchAlertsMetrics = async () => (await api.get('/alerts-metrics')).data;
 export const fetchSecurityMetrics = async () => (await api.get('/security-metrics')).data;
+export const fetchCostMetrics = async () => (await api.get('/cost-metrics')).data;
 export const login = async (username, password) => (await api.post('/login', { username, password })).data;
