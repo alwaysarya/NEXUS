@@ -1,24 +1,30 @@
 import { useState, useEffect } from 'react';
 import { ChevronRight, RotateCw, Undo2, Plus, CheckCircle2, Loader2, PlayCircle, Copy, Download, ExternalLink, Activity, History } from 'lucide-react';
-import { fetchDeployments } from '../services/api';
+import { fetchDeployments, fetchRealMetrics } from '../services/api';
 
 export default function DeploymentsPage() {
   const [deployments, setDeployments] = useState([]);
+  const [metrics, setMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadDeployments = async () => {
+    const loadData = async () => {
       try {
-        const data = await fetchDeployments();
-        setDeployments(data);
+        const [depData, metricData] = await Promise.all([fetchDeployments(), fetchRealMetrics()]);
+        setDeployments(depData);
+        setMetrics(metricData);
       } catch (error) {
-        console.error("Failed to fetch deployments", error);
+        console.error("Failed to fetch data", error);
       } finally {
         setLoading(false);
       }
     };
-    loadDeployments();
+    loadData();
   }, []);
+
+  // Real Mac Data se values nikalo
+  const cpuUsage = metrics ? metrics.cpu.usage.toFixed(1) : '38'; // Fallback to 38 if no data
+  const memUsage = metrics ? metrics.memory.usage_percent.toFixed(1) : '56';
 
   return (
     <div className="flex flex-col gap-6 p-6 overflow-y-auto h-full w-full">
@@ -86,7 +92,7 @@ export default function DeploymentsPage() {
       </div>
 
       {/* 3 Column Layout */}
-      <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-4">
         {/* Left: Release Notes */}
         <div className="bg-surface border border-border rounded-xl p-4 flex flex-col gap-4">
           <div className="flex justify-between items-center">
@@ -95,7 +101,7 @@ export default function DeploymentsPage() {
           </div>
           <p className="text-xs text-gray-400">Production deployment in progress</p>
           
-          <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-2 gap-4 text-xs mt-2">
+          <div className="grid grid-cols-2 gap-4 text-xs mt-2">
             <div><span className="text-gray-500 block">Commit</span><span className="text-gray-200 flex items-center gap-1">c9f3a7e <Copy size={10}/></span></div>
             <div><span className="text-gray-500 block">Branch</span><span className="text-gray-200">main</span></div>
             <div><span className="text-gray-500 block">Author</span><span className="text-gray-200">Aman Verma</span></div>
@@ -163,8 +169,8 @@ export default function DeploymentsPage() {
             </div>
             <div className="space-y-3">
               <div className="flex items-center justify-between text-xs"><span className="text-gray-400">Pods</span><span className="text-white flex items-center gap-2"><span className="flex gap-0.5">{[1,2,3,4].map(i => <span key={i} className="w-2 h-3 bg-green-500 rounded-sm"></span>)}</span> 4 / 4</span></div>
-              <div className="flex items-center justify-between text-xs"><span className="text-gray-400">CPU</span><div className="flex items-center gap-2 w-24"><div className="w-full bg-border h-1.5 rounded-full"><div className="bg-primary h-1.5 rounded-full" style={{width: '38%'}}></div></div><span className="text-white w-8 text-right">38%</span></div></div>
-              <div className="flex items-center justify-between text-xs"><span className="text-gray-400">Memory</span><div className="flex items-center gap-2 w-24"><div className="w-full bg-border h-1.5 rounded-full"><div className="bg-primary h-1.5 rounded-full" style={{width: '56%'}}></div></div><span className="text-white w-8 text-right">56%</span></div></div>
+              <div className="flex items-center justify-between text-xs"><span className="text-gray-400">CPU</span><div className="flex items-center gap-2 w-24"><div className="w-full bg-border h-1.5 rounded-full"><div className="bg-primary h-1.5 rounded-full" style={{width: `${cpuUsage}%`}}></div></div><span className="text-white w-8 text-right">{cpuUsage}%</span></div></div>
+              <div className="flex items-center justify-between text-xs"><span className="text-gray-400">Memory</span><div className="flex items-center gap-2 w-24"><div className="w-full bg-border h-1.5 rounded-full"><div className="bg-primary h-1.5 rounded-full" style={{width: `${memUsage}%`}}></div></div><span className="text-white w-8 text-right">{memUsage}%</span></div></div>
               <div className="flex items-center justify-between text-xs"><span className="text-gray-400">Uptime</span><span className="text-green-500">99.98%</span></div>
             </div>
           </div>

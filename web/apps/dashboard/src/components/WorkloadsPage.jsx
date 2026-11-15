@@ -1,24 +1,32 @@
 import { useState, useEffect } from 'react';
 import { Box, Layers, Server, Activity, Search, Plus, Filter, MoreHorizontal, Play } from 'lucide-react';
-import { fetchWorkloads } from '../services/api';
+import { fetchWorkloads, fetchRealMetrics } from '../services/api';
 
 export default function WorkloadsPage() {
   const [workloads, setWorkloads] = useState([]);
+  const [metrics, setMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadWorkloads = async () => {
+    const loadData = async () => {
       try {
-        const data = await fetchWorkloads();
-        setWorkloads(data);
+        const [workloadData, metricData] = await Promise.all([fetchWorkloads(), fetchRealMetrics()]);
+        setWorkloads(workloadData);
+        setMetrics(metricData);
       } catch (error) {
-        console.error("Failed to fetch workloads", error);
+        console.error("Failed to fetch data", error);
       } finally {
         setLoading(false);
       }
     };
-    loadWorkloads();
+    loadData();
   }, []);
+
+  // Real Mac Data se values nikalo
+  const cpuUsage = metrics ? metrics.cpu.usage.toFixed(1) : '0.0';
+  const memUsage = metrics ? metrics.memory.usage_percent.toFixed(1) : '0.0';
+  const runningWorkloads = workloads.filter(w => w.status === 'Running').length;
+  const pendingWorkloads = workloads.filter(w => w.status === 'Pending').length;
 
   return (
     <div className="flex flex-col gap-6 p-6 overflow-y-auto h-full w-full">
@@ -36,13 +44,13 @@ export default function WorkloadsPage() {
         </div>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-4 gap-4">
+      {/* Summary Cards - Real Mac Data */}
+      <div className="grid grid-cols-4 gap-4">
         {[
-          { label: 'Total Workloads', value: '36', icon: Layers, color: 'text-blue-500' },
-          { label: 'Running Pods', value: '142', icon: Activity, color: 'text-green-500' },
-          { label: 'Pending Pods', value: '6', icon: Server, color: 'text-yellow-500' },
-          { label: 'Failed Pods', value: '0', icon: Box, color: 'text-red-500' },
+          { label: 'Total Workloads', value: workloads.length.toString(), icon: Layers, color: 'text-blue-500' },
+          { label: 'Running Pods', value: runningWorkloads.toString(), icon: Activity, color: 'text-green-500' },
+          { label: 'Pending Pods', value: pendingWorkloads.toString(), icon: Server, color: 'text-yellow-500' },
+          { label: 'CPU Usage', value: `${cpuUsage}%`, icon: Box, color: 'text-red-500' },
         ].map((m) => (
           <div key={m.label} className="bg-surface border border-border rounded-xl p-4 flex items-center justify-between">
             <div>
@@ -105,8 +113,8 @@ export default function WorkloadsPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3">{w.replicas}</td>
-                  <td className="px-4 py-3">{w.cpu}</td>
-                  <td className="px-4 py-3">{w.memory}</td>
+                  <td className="px-4 py-3">{cpuUsage}%</td>
+                  <td className="px-4 py-3">{memUsage}%</td>
                   <td className="px-4 py-3">{w.age}</td>
                   <td className="px-4 py-3 text-right">
                     <button className="text-gray-500 hover:text-white"><MoreHorizontal size={16}/></button>

@@ -16,10 +16,7 @@ func CORS(next http.Handler) http.Handler {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-		if r.Method == "OPTIONS" {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
+		if r.Method == "OPTIONS" { w.WriteHeader(http.StatusOK); return }
 		next.ServeHTTP(w, r)
 	})
 }
@@ -27,15 +24,10 @@ func CORS(next http.Handler) http.Handler {
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
-		if authHeader == "" {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			return
-		}
+		if authHeader == "" { http.Error(w, "Unauthorized", http.StatusUnauthorized); return }
 		tokenString := strings.Replace(authHeader, "Bearer ", "", 1)
-		_, err := auth.ValidateToken(tokenString)
-		if err != nil {
-			http.Error(w, "Invalid token", http.StatusUnauthorized)
-			return
+		if _, err := auth.ValidateToken(tokenString); err != nil {
+			http.Error(w, "Invalid token", http.StatusUnauthorized); return
 		}
 		next.ServeHTTP(w, r)
 	})
@@ -60,6 +52,13 @@ func main() {
 	protectedMux.HandleFunc("/api/cost", api.CostHandler)
 	protectedMux.HandleFunc("/api/automation", api.AutomationHandler)
 	protectedMux.HandleFunc("/api/real-metrics", api.RealMetricsHandler)
+	protectedMux.HandleFunc("/api/network-metrics", api.NetworkMetricsHandler)
+	protectedMux.HandleFunc("/api/storage-metrics", api.StorageMetricsHandler)
+	protectedMux.HandleFunc("/api/observability-metrics", api.ObservabilityMetricsHandler)
+	protectedMux.HandleFunc("/api/automation-metrics", api.AutomationMetricsHandler)
+	protectedMux.HandleFunc("/api/traces-metrics", api.TracesMetricsHandler)
+	protectedMux.HandleFunc("/api/alerts-metrics", api.AlertsMetricsHandler)
+	protectedMux.HandleFunc("/api/security-metrics", api.SecurityMetricsHandler) // Naya security route
 	mux.Handle("/api/", AuthMiddleware(protectedMux))
 
 	handler := CORS(mux)

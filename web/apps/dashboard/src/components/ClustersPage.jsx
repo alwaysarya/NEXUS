@@ -2,26 +2,34 @@ import { useState, useEffect } from 'react';
 import { ChevronRight, RefreshCw, MoreHorizontal, ZoomIn, ZoomOut, Plus, Download, Network, Server } from 'lucide-react';
 import MetricCard from './ui/MetricCard';
 import PodPanel from './ui/PodPanel';
-import { fetchNodes } from '../services/api';
+import { fetchNodes, fetchRealMetrics } from '../services/api';
 
 export default function ClustersPage() {
   const [activeTab, setActiveTab] = useState('Overview');
   const [nodes, setNodes] = useState([]);
+  const [metrics, setMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadNodes = async () => {
+    const loadData = async () => {
       try {
-        const data = await fetchNodes();
-        setNodes(data);
+        const [nodeData, metricData] = await Promise.all([fetchNodes(), fetchRealMetrics()]);
+        setNodes(nodeData);
+        setMetrics(metricData);
       } catch (error) {
-        console.error("Failed to fetch nodes", error);
+        console.error("Failed to fetch data", error);
       } finally {
         setLoading(false);
       }
     };
-    loadNodes();
+    loadData();
   }, []);
+
+  // Real Mac Data se values nikalo
+  const cpuUsage = metrics ? metrics.cpu.usage.toFixed(1) : '0.0';
+  const memUsage = metrics ? metrics.memory.usage_percent.toFixed(1) : '0.0';
+  const memUsedGB = metrics ? (metrics.memory.used / (1024*1024*1024)).toFixed(1) : '0';
+  const memTotalGB = metrics ? (metrics.memory.total / (1024*1024*1024)).toFixed(1) : '0';
 
   return (
     <div className="flex h-full w-full">
@@ -53,11 +61,7 @@ export default function ClustersPage() {
         {/* Tabs */}
         <div className="flex gap-6 border-b border-border text-sm text-gray-400">
           {['Overview', 'Nodes', 'Pods', 'Workloads', 'Services', 'Networking', 'Storage', 'Events', 'Settings'].map((tab) => (
-            <div 
-              key={tab} 
-              onClick={() => setActiveTab(tab)}
-              className={`pb-2 cursor-pointer ${activeTab === tab ? 'text-white border-b-2 border-primary font-medium' : 'hover:text-white'}`}
-            >
+            <div key={tab} onClick={() => setActiveTab(tab)} className={`pb-2 cursor-pointer ${activeTab === tab ? 'text-white border-b-2 border-primary font-medium' : 'hover:text-white'}`}>
               {tab}
             </div>
           ))}
@@ -66,15 +70,17 @@ export default function ClustersPage() {
         {/* Tab Content */}
         {activeTab === 'Overview' ? (
           <>
+            {/* 6 Metric Cards - Real Data */}
             <div className="grid grid-cols-6 gap-4">
               <MetricCard title="Cluster Health" value="Healthy" subtitle="All systems nominal" color="#22c55e" />
               <MetricCard title="Nodes" value="12" subtitle="11 Ready • 1 NotReady" />
               <MetricCard title="Pods" value="148" subtitle="142 Running • 6 Pending" />
               <MetricCard title="Workloads" value="36" subtitle="28 Deployments • 8 StatefulSets" />
-              <MetricCard title="CPU Usage" value="42.8%" subtitle="314 / 736 vCPU" showGraph={true} color="#22c55e" />
-              <MetricCard title="Memory Usage" value="67.2%" subtitle="1.27 / 1.89 TiB" showGraph={true} color="#8b5cf6" />
+              <MetricCard title="CPU Usage" value={`${cpuUsage}%`} subtitle={`${metrics ? metrics.cpu.cores : '...'} cores`} showGraph={true} color="#22c55e" />
+              <MetricCard title="Memory Usage" value={`${memUsage}%`} subtitle={`${memUsedGB} / ${memTotalGB} GB`} showGraph={true} color="#8b5cf6" />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-3 gap-4">
+            
+            <div className="grid grid-cols-3 gap-4">
               <div className="col-span-2 bg-surface border border-border rounded-xl p-4 flex flex-col">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-sm font-medium text-white">Cluster Topology <span className="text-xs text-green-500 bg-green-500/10 px-1.5 py-0.5 rounded ml-2">Live</span></h3>
@@ -112,13 +118,14 @@ export default function ClustersPage() {
                   </div>
                 </div>
               </div>
+              
               <div className="bg-surface border border-border rounded-xl p-4">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-sm font-medium text-white">Resource Utilization</h3>
                   <span className="text-xs text-gray-400 border border-border px-2 py-1 rounded">Last 15 min</span>
                 </div>
                 <div className="space-y-4">
-                  {[{l:'CPU', v:42.8}, {l:'Memory', v:67.2}, {l:'Storage', v:58.1}].map((item) => (
+                  {[{l:'CPU', v: parseFloat(cpuUsage)}, {l:'Memory', v: parseFloat(memUsage)}, {l:'Storage', v:58.1}].map((item) => (
                     <div key={item.l}>
                       <div className="flex justify-between text-xs text-gray-400 mb-1"><span>{item.l}</span><span>{item.v}%</span></div>
                       <div className="w-full bg-border rounded-full h-2"><div className="bg-primary h-2 rounded-full" style={{ width: `${item.v}%` }}></div></div>
