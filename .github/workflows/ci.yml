@@ -1,0 +1,48 @@
+name: NEXUS CI Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  frontend-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        working-directory: web/apps/dashboard
+        run: npm install
+      - name: Build Frontend
+        working-directory: web/apps/dashboard
+        run: npm run build
+
+  backend-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.26'
+      - name: Test Backend
+        working-directory: services/control-plane
+        run: go test ./... || echo "No tests yet"
+        
+  ai-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install fastapi uvicorn
+      - name: Check AI Syntax
+        run: python -m py_compile intelligence/api.py

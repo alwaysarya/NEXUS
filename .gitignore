@@ -14,3 +14,8 @@ dist/
 # IDE
 .vscode/
 .idea/
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl
