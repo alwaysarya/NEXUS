@@ -12,12 +12,11 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-export const fetchNodes = async () => {
-  const response = await api.get('/nodes');
-  return response.data;
-};
-
-export const login = async (username, password) => {
-  const response = await api.post('/login', { username, password });
-  return response.data;
-};
+export const fetchNodes = async () => (await api.get('/nodes')).data;
+export const fetchDeployments = async () => (await api.get('/deployments')).data;
+export const fetchWorkloads = async () => (await api.get('/workloads')).data;
+export const fetchNetworking = async () => (await api.get('/networking')).data;
+export const fetchStorage = async () => (await api.get('/storage')).data;
+export const fetchCost = async () => (await api.get('/cost')).data;
+export const fetchAutomation = async () => (await api.get('/automation')).data;
+export const login = async (username, password) => (await api.post('/login', { username, password })).data;

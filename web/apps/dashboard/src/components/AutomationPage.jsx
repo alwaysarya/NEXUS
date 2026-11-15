@@ -1,14 +1,15 @@
-import { Terminal, Play, RotateCw, Settings, Shield, Clock, CheckCircle2 } from 'lucide-react';
-
-const scripts = [
-  { id: 'SCR-001', name: 'Scale Cluster Nodes', desc: 'Auto-scale worker nodes based on CPU load', schedule: 'Every 5 min', status: 'Active', lastRun: '2 mins ago' },
-  { id: 'SCR-002', name: 'Database Backup', desc: 'Snapshot RDS instance and store in S3', schedule: 'Daily at 02:00 AM', status: 'Active', lastRun: '6 hrs ago' },
-  { id: 'SCR-003', name: 'Cleanup Old Logs', desc: 'Delete logs older than 30 days from CloudWatch', schedule: 'Weekly (Sun)', status: 'Paused', lastRun: '3 days ago' },
-  { id: 'SCR-004', name: 'Rotate Secrets', desc: 'Rotate AWS IAM keys and API tokens', schedule: 'Every 30 days', status: 'Active', lastRun: '12 days ago' },
-  { id: 'SCR-005', name: 'Security Patch Update', desc: 'Apply latest OS patches to all nodes', schedule: 'Monthly', status: 'Active', lastRun: '1 month ago' },
-];
+import { useState, useEffect } from 'react';
+import { Terminal, Play, RotateCw, Settings, Clock, CheckCircle2 } from 'lucide-react';
+import { fetchAutomation } from '../services/api';
 
 export default function AutomationPage() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchAutomation().then(setData).catch(console.error).finally(() => setLoading(false));
+  }, []);
+
   return (
     <div className="flex flex-col gap-6 p-6 overflow-y-auto h-full w-full">
       <div className="flex items-center justify-between">
@@ -55,12 +56,11 @@ export default function AutomationPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {scripts.map((script) => (
+            {loading ? <tr><td colSpan="6" className="text-center py-4 text-gray-500">Loading...</td></tr> : data.map((script) => (
               <tr key={script.id} className="hover:bg-white/5">
                 <td className="px-4 py-3 text-gray-500 font-mono">{script.id}</td>
                 <td className="px-4 py-3">
                   <div className="text-white font-medium">{script.name}</div>
-                  <div className="text-gray-500 text-xs">{script.desc}</div>
                 </td>
                 <td className="px-4 py-3">
                   <span className="flex items-center gap-1 text-gray-400"><Clock size={12}/> {script.schedule}</span>

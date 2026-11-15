@@ -1,16 +1,21 @@
-import { Network, Globe, Shield, Server, Activity, ChevronRight, MoreHorizontal } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Network, Globe, Shield, Server, Activity } from 'lucide-react';
+import { fetchNetworking } from '../services/api';
 
 export default function NetworkingPage() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchNetworking().then(setData).catch(console.error).finally(() => setLoading(false));
+  }, []);
+
   return (
     <div className="flex flex-col gap-6 p-6 overflow-y-auto h-full w-full">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white flex items-center gap-3"><Network className="text-primary" size={24} /> Networking</h1>
           <p className="text-sm text-gray-400 mt-1">Manage ingress, egress, load balancers, and network policies.</p>
-        </div>
-        <div className="flex gap-3">
-          <button className="border border-border text-gray-300 text-sm px-3 py-1.5 rounded hover:bg-white/5">Network Policies</button>
-          <button className="bg-primary text-white text-sm px-3 py-1.5 rounded hover:bg-primary/90">+ Add Service</button>
         </div>
       </div>
 
@@ -21,17 +26,13 @@ export default function NetworkingPage() {
             <span className="text-xs text-gray-500">3 Active</span>
           </div>
           <div className="space-y-3">
-            {[
-              { name: 'api.nexus.io', type: 'ALB', target: 'api-gateway:80', status: 'Active' },
-              { name: 'grafana.nexus.io', type: 'ALB', target: 'grafana:3000', status: 'Active' },
-              { name: 'argocd.nexus.io', type: 'ALB', target: 'argocd-server:443', status: 'Active' },
-            ].map((ing) => (
+            {loading ? <div className="text-gray-500 text-sm">Loading...</div> : data.map((ing) => (
               <div key={ing.name} className="bg-background border border-border rounded p-2 flex items-center justify-between">
                 <div>
                   <div className="text-xs text-white flex items-center gap-2"><Globe size={12} className="text-primary"/> {ing.name}</div>
                   <div className="text-[10px] text-gray-500 mt-1">Type: {ing.type} | Target: {ing.target}</div>
                 </div>
-                <span className="text-[10px] text-green-500 bg-green-500/10 px-1.5 py-0.5 rounded border border-green-500/20">Active</span>
+                <span className="text-[10px] text-green-500 bg-green-500/10 px-1.5 py-0.5 rounded border border-green-500/20">{ing.status}</span>
               </div>
             ))}
           </div>
@@ -52,7 +53,7 @@ export default function NetworkingPage() {
                   <div className="text-xs text-white flex items-center gap-2"><Server size={12} className="text-blue-500"/> {lb.name}</div>
                   <div className="text-[10px] text-gray-500 mt-1">IP: {lb.ip} | Traffic: {lb.traffic}</div>
                 </div>
-                <span className="text-[10px] text-green-500 bg-green-500/10 px-1.5 py-0.5 rounded border border-green-500/20">Healthy</span>
+                <span className="text-[10px] text-green-500 bg-green-500/10 px-1.5 py-0.5 rounded border border-green-500/20">{lb.status}</span>
               </div>
             ))}
           </div>
@@ -64,7 +65,7 @@ export default function NetworkingPage() {
             <span className="text-xs text-gray-500">12 Rules</span>
           </div>
           <div className="space-y-3">
-             {[
+            {[
               { name: 'allow-api-to-db', port: '5432', status: 'Enforced' },
               { name: 'deny-all-egress', port: 'Any', status: 'Enforced' },
               { name: 'allow-monitoring', port: '9090', status: 'Enforced' },

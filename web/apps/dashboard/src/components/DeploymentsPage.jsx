@@ -1,8 +1,28 @@
+import { useState, useEffect } from 'react';
 import { ChevronRight, RotateCw, Undo2, Plus, CheckCircle2, Loader2, PlayCircle, Copy, Download, ExternalLink, Activity, History } from 'lucide-react';
+import { fetchDeployments } from '../services/api';
 
 export default function DeploymentsPage() {
+  const [deployments, setDeployments] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadDeployments = async () => {
+      try {
+        const data = await fetchDeployments();
+        setDeployments(data);
+      } catch (error) {
+        console.error("Failed to fetch deployments", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadDeployments();
+  }, []);
+
   return (
     <div className="flex flex-col gap-6 p-6 overflow-y-auto h-full w-full">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2 text-sm text-gray-400 mb-1">
@@ -22,6 +42,7 @@ export default function DeploymentsPage() {
         </div>
       </div>
 
+      {/* Repo Info Bar */}
       <div className="bg-surface border border-border rounded-xl p-3 flex items-center justify-between text-sm">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2 font-medium text-white">
@@ -41,6 +62,7 @@ export default function DeploymentsPage() {
         </div>
       </div>
 
+      {/* Pipeline Flow */}
       <div className="bg-surface border border-border rounded-xl p-4 flex items-center justify-between">
         {[
           { label: 'Code Checkout', time: '12s', status: 'done' },
@@ -63,13 +85,16 @@ export default function DeploymentsPage() {
         ))}
       </div>
 
+      {/* 3 Column Layout */}
       <div className="grid grid-cols-3 gap-4">
+        {/* Left: Release Notes */}
         <div className="bg-surface border border-border rounded-xl p-4 flex flex-col gap-4">
           <div className="flex justify-between items-center">
             <h3 className="text-white font-medium">Release v2.8.4</h3>
             <span className="text-xs text-primary bg-primary/10 px-2 py-0.5 rounded border border-primary/20">Deploying</span>
           </div>
           <p className="text-xs text-gray-400">Production deployment in progress</p>
+          
           <div className="grid grid-cols-2 gap-4 text-xs mt-2">
             <div><span className="text-gray-500 block">Commit</span><span className="text-gray-200 flex items-center gap-1">c9f3a7e <Copy size={10}/></span></div>
             <div><span className="text-gray-500 block">Branch</span><span className="text-gray-200">main</span></div>
@@ -77,6 +102,7 @@ export default function DeploymentsPage() {
             <div><span className="text-gray-500 block">Released</span><span className="text-gray-200">Jun 20, 2025, 10:24 AM</span></div>
             <div><span className="text-gray-500 block">Changes</span><span className="text-green-500">+24</span> <span className="text-red-500">-6</span></div>
           </div>
+
           <div className="mt-2">
             <h4 className="text-sm text-gray-300 mb-2 flex items-center gap-2">📝 Release Notes</h4>
             <ul className="text-xs text-gray-400 space-y-2 list-disc pl-4">
@@ -88,6 +114,7 @@ export default function DeploymentsPage() {
           </div>
         </div>
 
+        {/* Middle: Pipeline Logs */}
         <div className="bg-surface border border-border rounded-xl p-4 flex flex-col gap-3">
           <div className="flex items-center justify-between border-b border-border pb-2 text-xs text-gray-400">
             <div className="flex gap-4">
@@ -102,6 +129,7 @@ export default function DeploymentsPage() {
               <Copy size={12} className="cursor-pointer"/> <Download size={12} className="cursor-pointer"/>
             </div>
           </div>
+          
           <div className="bg-background rounded border border-border p-3 font-mono text-[11px] text-gray-300 flex-1 overflow-y-auto h-64 space-y-1.5">
             <div className="text-gray-500 mb-2 flex items-center gap-2"><PlayCircle size={12}/> Streaming live logs...</div>
             <div><span className="text-green-500">10:31:42</span> [INFO] Starting production deployment...</div>
@@ -117,6 +145,7 @@ export default function DeploymentsPage() {
           </div>
         </div>
 
+        {/* Right: Environments & Health */}
         <div className="flex flex-col gap-4">
           <div className="bg-surface border border-border rounded-xl p-4">
             <h3 className="text-sm font-medium text-white mb-3">Environments</h3>
@@ -126,6 +155,7 @@ export default function DeploymentsPage() {
               <div className="flex items-center justify-between bg-primary/10 p-1.5 -mx-1.5 rounded"><div className="flex items-center gap-2 text-white"><span className="w-1.5 h-1.5 rounded-full bg-primary"></span> Production</div><span className="text-primary font-medium">v2.8.4 →</span></div>
             </div>
           </div>
+
           <div className="bg-surface border border-border rounded-xl p-4">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-sm font-medium text-white flex items-center gap-2"><Activity size={14} className="text-primary"/> Deployment Health</h3>
@@ -141,6 +171,7 @@ export default function DeploymentsPage() {
         </div>
       </div>
 
+      {/* Bottom: Deployment History */}
       <div className="bg-surface border border-border rounded-xl flex flex-col">
         <div className="p-4 border-b border-border">
           <h3 className="text-sm font-medium text-white flex items-center gap-2"><History size={14}/> Deployment History</h3>
@@ -157,39 +188,29 @@ export default function DeploymentsPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-border text-xs">
-            <tr className="hover:bg-white/5">
-              <td className="px-4 py-3 text-white">v2.8.4</td>
-              <td className="px-4 py-3">Production</td>
-              <td className="px-4 py-3"><span className="flex items-center gap-1.5 text-primary"><Loader2 size={12} className="animate-spin"/> Deploying</span></td>
-              <td className="px-4 py-3">Jun 20, 2025, 10:24 AM</td>
-              <td className="px-4 py-3">—</td>
-              <td className="px-4 py-3 text-right flex justify-end gap-2">
-                <button className="border border-border px-2 py-1 rounded hover:bg-white/5 flex items-center gap-1"><Undo2 size={10}/> Rollback</button>
-                <button className="border border-border px-2 py-1 rounded hover:bg-white/5">...</button>
-              </td>
-            </tr>
-            <tr className="hover:bg-white/5">
-              <td className="px-4 py-3 text-white">v2.8.3</td>
-              <td className="px-4 py-3">Production</td>
-              <td className="px-4 py-3"><span className="flex items-center gap-1.5 text-green-500"><CheckCircle2 size={12}/> Succeeded</span></td>
-              <td className="px-4 py-3">Jun 18, 2025, 9:12 PM</td>
-              <td className="px-4 py-3">7m 18s</td>
-              <td className="px-4 py-3 text-right flex justify-end gap-2">
-                <button className="border border-border px-2 py-1 rounded hover:bg-white/5 flex items-center gap-1"><Undo2 size={10}/> Rollback</button>
-                <button className="border border-border px-2 py-1 rounded hover:bg-white/5">...</button>
-              </td>
-            </tr>
-            <tr className="hover:bg-white/5">
-              <td className="px-4 py-3 text-white">v2.8.2</td>
-              <td className="px-4 py-3">Production</td>
-              <td className="px-4 py-3"><span className="flex items-center gap-1.5 text-green-500"><CheckCircle2 size={12}/> Succeeded</span></td>
-              <td className="px-4 py-3">Jun 15, 2025, 4:06 PM</td>
-              <td className="px-4 py-3">6m 47s</td>
-              <td className="px-4 py-3 text-right flex justify-end gap-2">
-                <button className="border border-border px-2 py-1 rounded hover:bg-white/5 flex items-center gap-1"><Undo2 size={10}/> Rollback</button>
-                <button className="border border-border px-2 py-1 rounded hover:bg-white/5">...</button>
-              </td>
-            </tr>
+            {loading ? (
+              <tr><td colSpan="6" className="text-center py-4 text-gray-500">Loading deployments...</td></tr>
+            ) : deployments.length === 0 ? (
+              <tr><td colSpan="6" className="text-center py-4 text-gray-500">No deployments found.</td></tr>
+            ) : (
+              deployments.map((dep, i) => (
+                <tr key={i} className="hover:bg-white/5">
+                  <td className="px-4 py-3 text-white">{dep.release}</td>
+                  <td className="px-4 py-3">{dep.environment}</td>
+                  <td className="px-4 py-3">
+                    <span className={`flex items-center gap-1.5 ${dep.status === 'Deploying' ? 'text-primary' : 'text-green-500'}`}>
+                      {dep.status === 'Deploying' ? <Loader2 size={12} className="animate-spin"/> : <CheckCircle2 size={12}/>} {dep.status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">{dep.deployedAt}</td>
+                  <td className="px-4 py-3">{dep.duration}</td>
+                  <td className="px-4 py-3 text-right flex justify-end gap-2">
+                    <button className="border border-border px-2 py-1 rounded hover:bg-white/5 flex items-center gap-1"><Undo2 size={10}/> Rollback</button>
+                    <button className="border border-border px-2 py-1 rounded hover:bg-white/5">...</button>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

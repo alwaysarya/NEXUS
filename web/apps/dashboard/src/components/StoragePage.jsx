@@ -1,16 +1,21 @@
-import { Database, HardDrive, Server, Activity, Plus, Download } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Database, HardDrive, Server, Activity, Download } from 'lucide-react';
+import { fetchStorage } from '../services/api';
 
 export default function StoragePage() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchStorage().then(setData).catch(console.error).finally(() => setLoading(false));
+  }, []);
+
   return (
     <div className="flex flex-col gap-6 p-6 overflow-y-auto h-full w-full">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white flex items-center gap-3"><Database className="text-primary" size={24} /> Storage</h1>
           <p className="text-sm text-gray-400 mt-1">Manage persistent volumes, object storage, and backups.</p>
-        </div>
-        <div className="flex gap-3">
-          <button className="border border-border text-gray-300 text-sm px-3 py-1.5 rounded hover:bg-white/5">Create Snapshot</button>
-          <button className="bg-primary text-white text-sm px-3 py-1.5 rounded hover:bg-primary/90">+ Provision Volume</button>
         </div>
       </div>
 
@@ -44,23 +49,16 @@ export default function StoragePage() {
               <th className="px-4 py-3 font-medium">Access Mode</th>
               <th className="px-4 py-3 font-medium">Status</th>
               <th className="px-4 py-3 font-medium">Storage Class</th>
-              <th className="px-4 py-3 font-medium">Claim</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {[
-              { name: 'pvc-postgres-data', cap: '500 GiB', access: 'ReadWriteOnce', status: 'Bound', class: 'gp3', claim: 'postgres-db' },
-              { name: 'pvc-redis-data', cap: '100 GiB', access: 'ReadWriteOnce', status: 'Bound', class: 'gp3', claim: 'redis-cache' },
-              { name: 'pvc-prometheus-data', cap: '1 TiB', access: 'ReadWriteMany', status: 'Bound', class: 'efs', claim: 'prometheus' },
-              { name: 'pvc-grafana-data', cap: '50 GiB', access: 'ReadWriteOnce', status: 'Bound', class: 'gp3', claim: 'grafana' },
-            ].map((vol) => (
+            {loading ? <tr><td colSpan="5" className="text-center py-4 text-gray-500">Loading...</td></tr> : data.map((vol) => (
               <tr key={vol.name} className="hover:bg-white/5">
                 <td className="px-4 py-3 text-white font-medium">{vol.name}</td>
-                <td className="px-4 py-3">{vol.cap}</td>
+                <td className="px-4 py-3">{vol.capacity}</td>
                 <td className="px-4 py-3">{vol.access}</td>
                 <td className="px-4 py-3"><span className="text-xs text-green-500 bg-green-500/10 px-1.5 py-0.5 rounded border border-green-500/20">{vol.status}</span></td>
                 <td className="px-4 py-3">{vol.class}</td>
-                <td className="px-4 py-3 text-primary">{vol.claim}</td>
               </tr>
             ))}
           </tbody>

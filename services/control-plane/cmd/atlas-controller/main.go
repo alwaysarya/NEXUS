@@ -48,11 +48,17 @@ func main() {
 	mux.HandleFunc("/api/login", api.LoginHandler)
 	mux.HandleFunc("/api/register", api.RegisterHandler)
 	mux.HandleFunc("/api/health", api.CustomHealthHandler)
-	mux.Handle("/metrics", promhttp.Handler()) // Prometheus metrics endpoint
+	mux.Handle("/metrics", promhttp.Handler())
 
 	protectedMux := http.NewServeMux()
 	protectedMux.HandleFunc("/api/nodes", api.CustomNodesHandler)
 	protectedMux.HandleFunc("/api/predict", api.AIPredictHandler)
+	protectedMux.HandleFunc("/api/deployments", api.DeploymentsHandler)
+	protectedMux.HandleFunc("/api/workloads", api.WorkloadsHandler)
+	protectedMux.HandleFunc("/api/networking", api.NetworkingHandler)
+	protectedMux.HandleFunc("/api/storage", api.StorageHandler)
+	protectedMux.HandleFunc("/api/cost", api.CostHandler)
+	protectedMux.HandleFunc("/api/automation", api.AutomationHandler)
 	mux.Handle("/api/", AuthMiddleware(protectedMux))
 
 	handler := CORS(mux)

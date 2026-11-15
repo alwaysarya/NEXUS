@@ -1,14 +1,24 @@
-import { Box, Layers, Server, Activity, Search, Plus, Filter, MoreHorizontal, Play, Square } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Box, Layers, Server, Activity, Search, Plus, Filter, MoreHorizontal, Play } from 'lucide-react';
+import { fetchWorkloads } from '../services/api';
 
 export default function WorkloadsPage() {
-  const workloads = [
-    { name: 'nexus-api', type: 'Deployment', namespace: 'production', status: 'Running', replicas: '4/4', cpu: '38%', mem: '56%', age: '4mo' },
-    { name: 'auth-service', type: 'Deployment', namespace: 'production', status: 'Running', replicas: '3/3', cpu: '22%', mem: '41%', age: '4mo' },
-    { name: 'postgres-db', type: 'StatefulSet', namespace: 'production', status: 'Running', replicas: '1/1', cpu: '45%', mem: '72%', age: '4mo' },
-    { name: 'redis-cache', type: 'StatefulSet', namespace: 'production', status: 'Running', replicas: '1/1', cpu: '12%', mem: '34%', age: '4mo' },
-    { name: 'worker-queue', type: 'Deployment', namespace: 'staging', status: 'Pending', replicas: '1/2', cpu: '0%', mem: '0%', age: '2h' },
-    { name: 'nginx-ingress', type: 'DaemonSet', namespace: 'kube-system', status: 'Running', replicas: '4/4', cpu: '5%', mem: '12%', age: '4mo' },
-  ];
+  const [workloads, setWorkloads] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadWorkloads = async () => {
+      try {
+        const data = await fetchWorkloads();
+        setWorkloads(data);
+      } catch (error) {
+        console.error("Failed to fetch workloads", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadWorkloads();
+  }, []);
 
   return (
     <div className="flex flex-col gap-6 p-6 overflow-y-auto h-full w-full">
@@ -79,27 +89,31 @@ export default function WorkloadsPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {workloads.map((w, i) => (
-              <tr key={i} className="hover:bg-white/5">
-                <td className="px-4 py-3 text-white font-medium">{w.name}</td>
-                <td className="px-4 py-3">
-                  <span className="text-xs bg-white/5 border border-border px-2 py-0.5 rounded text-gray-300">{w.type}</span>
-                </td>
-                <td className="px-4 py-3 text-gray-400">{w.namespace}</td>
-                <td className="px-4 py-3">
-                  <span className={`flex items-center gap-1.5 text-xs ${w.status === 'Running' ? 'text-green-500' : 'text-yellow-500'}`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${w.status === 'Running' ? 'bg-green-500' : 'bg-yellow-500'}`}></span> {w.status}
-                  </span>
-                </td>
-                <td className="px-4 py-3">{w.replicas}</td>
-                <td className="px-4 py-3">{w.cpu}</td>
-                <td className="px-4 py-3">{w.mem}</td>
-                <td className="px-4 py-3">{w.age}</td>
-                <td className="px-4 py-3 text-right">
-                  <button className="text-gray-500 hover:text-white"><MoreHorizontal size={16}/></button>
-                </td>
-              </tr>
-            ))}
+            {loading ? (
+              <tr><td colSpan="9" className="text-center py-4 text-gray-500">Loading workloads...</td></tr>
+            ) : workloads.length === 0 ? (
+              <tr><td colSpan="9" className="text-center py-4 text-gray-500">No workloads found.</td></tr>
+            ) : (
+              workloads.map((w, i) => (
+                <tr key={i} className="hover:bg-white/5">
+                  <td className="px-4 py-3 text-white font-medium">{w.name}</td>
+                  <td className="px-4 py-3"><span className="text-xs bg-white/5 border border-border px-2 py-0.5 rounded text-gray-300">{w.type}</span></td>
+                  <td className="px-4 py-3 text-gray-400">{w.namespace}</td>
+                  <td className="px-4 py-3">
+                    <span className={`flex items-center gap-1.5 text-xs ${w.status === 'Running' ? 'text-green-500' : 'text-yellow-500'}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${w.status === 'Running' ? 'bg-green-500' : 'bg-yellow-500'}`}></span> {w.status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">{w.replicas}</td>
+                  <td className="px-4 py-3">{w.cpu}</td>
+                  <td className="px-4 py-3">{w.memory}</td>
+                  <td className="px-4 py-3">{w.age}</td>
+                  <td className="px-4 py-3 text-right">
+                    <button className="text-gray-500 hover:text-white"><MoreHorizontal size={16}/></button>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
