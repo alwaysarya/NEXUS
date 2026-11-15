@@ -8,6 +8,7 @@ import (
 	"github.com/alwaysarya/nexus/services/control-plane/internal/api"
 	"github.com/alwaysarya/nexus/services/control-plane/internal/auth"
 	"github.com/alwaysarya/nexus/services/control-plane/internal/database"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func CORS(next http.Handler) http.Handler {
@@ -47,10 +48,11 @@ func main() {
 	mux.HandleFunc("/api/login", api.LoginHandler)
 	mux.HandleFunc("/api/register", api.RegisterHandler)
 	mux.HandleFunc("/api/health", api.CustomHealthHandler)
+	mux.Handle("/metrics", promhttp.Handler()) // Prometheus metrics endpoint
 
 	protectedMux := http.NewServeMux()
 	protectedMux.HandleFunc("/api/nodes", api.CustomNodesHandler)
-	protectedMux.HandleFunc("/api/predict", api.AIPredictHandler) // Naya AI route
+	protectedMux.HandleFunc("/api/predict", api.AIPredictHandler)
 	mux.Handle("/api/", AuthMiddleware(protectedMux))
 
 	handler := CORS(mux)
