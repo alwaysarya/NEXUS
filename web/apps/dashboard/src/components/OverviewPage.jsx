@@ -1,19 +1,24 @@
 import { useState, useEffect } from 'react';
-import { Activity, Box, Server, Shield, Layers, ChevronRight, Cloud } from 'lucide-react';
+import { Activity, Box, Server, Shield, Layers, ChevronRight, Cloud, Globe, Boxes } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { fetchRealMetrics, fetchAWSMetrics } from '../services/api';
+import { fetchRealMetrics, fetchAWSMetrics, fetchGCPMetrics, fetchAzureMetrics } from '../services/api';
 
 const chartData = [ { time: '00:00', req: 40 }, { time: '04:00', req: 60 }, { time: '08:00', req: 80 }, { time: '12:00', req: 100 }, { time: '16:00', req: 90 }, { time: '20:00', req: 110 } ];
 
 export default function OverviewPage() {
   const [metrics, setMetrics] = useState(null);
-  const [awsMetrics, setAwsMetrics] = useState(null);
+  const [aws, setAws] = useState(null);
+  const [gcp, setGcp] = useState(null);
+  const [azure, setAzure] = useState(null);
+  
   const env = localStorage.getItem('nexus_env')?.toLowerCase() || 'production';
   const region = localStorage.getItem('nexus_region')?.split(' ')[0] || 'us-east-1';
 
   useEffect(() => {
     fetchRealMetrics(env, region).then(setMetrics).catch(console.error);
-    fetchAWSMetrics().then(setAwsMetrics).catch(console.error);
+    fetchAWSMetrics().then(setAws).catch(console.error);
+    fetchGCPMetrics().then(setGcp).catch(console.error);
+    fetchAzureMetrics().then(setAzure).catch(console.error);
   }, [env, region]);
 
   return (
@@ -23,22 +28,61 @@ export default function OverviewPage() {
         <p className="text-sm text-gray-400 mt-1">Global summary of your cloud infrastructure and services.</p>
       </div>
 
-      {/* Metrics Row - 5 Cards (Added AWS) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      {/* Top 4 Metrics */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: 'CPU Usage', value: metrics ? `${metrics.cpu.usage.toFixed(1)}%` : '...', sub: `${metrics ? metrics.cpu.cores : '...'} cores`, icon: Box, color: 'text-blue-500' },
           { label: 'Memory Used', value: metrics ? `${(metrics.memory.used / (1024*1024*1024)).toFixed(1)} GB` : '...', sub: `${metrics ? (metrics.memory.usage_percent).toFixed(1) : '...'}%`, icon: Layers, color: 'text-purple-500' },
           { label: 'OS', value: metrics ? metrics.host.platform : '...', sub: metrics ? metrics.host.os : '...', icon: Server, color: 'text-green-500' },
           { label: 'Uptime', value: metrics ? `${(metrics.host.uptime / 3600).toFixed(1)} hrs` : '...', sub: 'System Uptime', icon: Shield, color: 'text-yellow-500' },
-          { label: 'AWS S3 Buckets', value: awsMetrics ? awsMetrics.s3_buckets : '...', sub: awsMetrics ? awsMetrics.status : '...', icon: Cloud, color: 'text-orange-500' },
         ].map((m) => (
           <div key={m.label} className="bg-surface border border-border rounded-xl p-4 flex flex-col justify-between">
             <div className="flex items-center justify-between text-sm text-gray-400"><span>{m.label}</span><m.icon size={16} className={m.color} /></div>
-            <div className="mt-3"><div className="text-2xl font-bold text-white">{m.value}</div><div className="text-xs text-gray-500 mt-1 truncate">{m.sub}</div></div>
+            <div className="mt-3"><div className="text-2xl font-bold text-white">{m.value}</div><div className="text-xs text-gray-500 mt-1">{m.sub}</div></div>
           </div>
         ))}
       </div>
 
+      {/* Cloud Providers Cards */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="bg-surface border border-border rounded-xl p-5 flex flex-col justify-between relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-orange-500/10 rounded-bl-full -mr-4 -mt-4"></div>
+          <div className="flex items-center gap-3 mb-4 z-10">
+            <div className="p-2 bg-orange-500/10 rounded-lg"><Cloud size={20} className="text-orange-500" /></div>
+            <div><h3 className="text-white font-medium">AWS Cloud</h3><p className="text-xs text-gray-500">Amazon Web Services</p></div>
+          </div>
+          <div className="flex items-end justify-between z-10">
+            <div><div className="text-3xl font-bold text-white">{aws ? aws.s3_buckets : '...'}</div><div className="text-xs text-gray-400 mt-1">Connected Providers</div></div>
+            <span className={`text-[10px] px-2 py-0.5 rounded border ${aws?.status?.includes('connected') ? 'text-green-500 border-green-500/20 bg-green-500/5' : 'text-yellow-500 border-yellow-500/20 bg-yellow-500/5'}`}>{aws ? aws.status : '...'}</span>
+          </div>
+        </div>
+
+        <div className="bg-surface border border-border rounded-xl p-5 flex flex-col justify-between relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 rounded-bl-full -mr-4 -mt-4"></div>
+          <div className="flex items-center gap-3 mb-4 z-10">
+            <div className="p-2 bg-blue-500/10 rounded-lg"><Globe size={20} className="text-blue-500" /></div>
+            <div><h3 className="text-white font-medium">Google Cloud</h3><p className="text-xs text-gray-500">GCP Platform</p></div>
+          </div>
+          <div className="flex items-end justify-between z-10">
+            <div><div className="text-3xl font-bold text-white">{gcp ? gcp.projects : '...'}</div><div className="text-xs text-gray-400 mt-1">Projects</div></div>
+            <span className={`text-[10px] px-2 py-0.5 rounded border ${gcp?.status?.includes('connected') ? 'text-green-500 border-green-500/20 bg-green-500/5' : 'text-yellow-500 border-yellow-500/20 bg-yellow-500/5'}`}>{gcp ? gcp.status : '...'}</span>
+          </div>
+        </div>
+
+        <div className="bg-surface border border-border rounded-xl p-5 flex flex-col justify-between relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-cyan-500/10 rounded-bl-full -mr-4 -mt-4"></div>
+          <div className="flex items-center gap-3 mb-4 z-10">
+            <div className="p-2 bg-cyan-500/10 rounded-lg"><Boxes size={20} className="text-cyan-500" /></div>
+            <div><h3 className="text-white font-medium">Microsoft Azure</h3><p className="text-xs text-gray-500">Azure Cloud</p></div>
+          </div>
+          <div className="flex items-end justify-between z-10">
+            <div><div className="text-3xl font-bold text-white">{azure ? azure.virtual_machines : '...'}</div><div className="text-xs text-gray-400 mt-1">Virtual Machines</div></div>
+            <span className={`text-[10px] px-2 py-0.5 rounded border ${azure?.status?.includes('connected') ? 'text-green-500 border-green-500/20 bg-green-500/5' : 'text-yellow-500 border-yellow-500/20 bg-yellow-500/5'}`}>{azure ? azure.status : '...'}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 bg-surface border border-border rounded-xl p-4 flex flex-col">
           <div className="flex justify-between items-center mb-4"><h3 className="text-sm font-medium text-white">Global Traffic Overview</h3><span className="text-xs text-gray-400 border border-border px-2 py-1 rounded">Last 24 hours</span></div>
@@ -53,19 +97,40 @@ export default function OverviewPage() {
           </div>
         </div>
 
+        {/* System Health with Cloud Statuses */}
         <div className="bg-surface border border-border rounded-xl p-4 flex flex-col">
           <div className="flex justify-between items-center mb-4"><h3 className="text-sm font-medium text-white">System Health</h3><span className="text-xs text-green-500 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-500"></span> Live</span></div>
           <div className="flex-1 flex flex-col justify-center gap-4">
-            {[
-              { name: 'CPU Cores', status: 'Healthy', val: metrics ? metrics.cpu.cores : '...' },
-              { name: 'Memory', status: metrics && metrics.memory.usage_percent > 80 ? 'Degraded' : 'Healthy', val: metrics ? `${(metrics.memory.usage_percent).toFixed(1)}%` : '...' },
-              { name: 'AWS Status', status: awsMetrics ? 'Connected' : 'Disconnected', val: awsMetrics ? awsMetrics.region : '...' },
-            ].map((sys) => (
-              <div key={sys.name} className="flex items-center justify-between">
-                <div className="flex items-center gap-2"><span className={`w-2 h-2 rounded-full ${sys.status === 'Healthy' || sys.status === 'Connected' ? 'bg-green-500' : 'bg-yellow-500'}`}></span><span className="text-sm text-gray-300">{sys.name}</span></div>
-                <div className="text-right"><div className="text-xs text-white">{sys.val}</div><div className={`text-[10px] ${sys.status === 'Healthy' || sys.status === 'Connected' ? 'text-green-500' : 'text-yellow-500'}`}>{sys.status}</div></div>
+            {/* Local Mac Stats */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-green-500"></span><span className="text-sm text-gray-300">CPU Cores</span></div>
+              <div className="text-right"><div className="text-xs text-white">{metrics ? metrics.cpu.cores : '...'}</div><div className="text-[10px] text-green-500">Healthy</div></div>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2"><span className={`w-2 h-2 rounded-full ${metrics && metrics.memory.usage_percent > 80 ? 'bg-yellow-500' : 'bg-green-500'}`}></span><span className="text-sm text-gray-300">Memory</span></div>
+              <div className="text-right"><div className="text-xs text-white">{metrics ? `${(metrics.memory.usage_percent).toFixed(1)}%` : '...'}</div><div className={`text-[10px] ${metrics && metrics.memory.usage_percent > 80 ? 'text-yellow-500' : 'text-green-500'}`}>{metrics && metrics.memory.usage_percent > 80 ? 'Degraded' : 'Healthy'}</div></div>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-green-500"></span><span className="text-sm text-gray-300">Platform</span></div>
+              <div className="text-right"><div className="text-xs text-white">{metrics ? metrics.host.platform : '...'}</div><div className="text-[10px] text-green-500">Healthy</div></div>
+            </div>
+
+            {/* Cloud Providers Status */}
+            <div className="mt-2 pt-2 border-t border-border">
+              <div className="text-xs text-gray-500 mb-2">Cloud Providers</div>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs text-gray-300">AWS</span>
+                <span className="text-[10px] text-green-500 flex items-center gap-1"><span className="w-1 h-1 bg-green-500 rounded-full"></span>{aws ? aws.status : '...'}</span>
               </div>
-            ))}
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs text-gray-300">GCP</span>
+                <span className="text-[10px] text-green-500 flex items-center gap-1"><span className="w-1 h-1 bg-green-500 rounded-full"></span>{gcp ? gcp.status : '...'}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-gray-300">Azure</span>
+                <span className="text-[10px] text-green-500 flex items-center gap-1"><span className="w-1 h-1 bg-green-500 rounded-full"></span>{azure ? azure.status : '...'}</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>

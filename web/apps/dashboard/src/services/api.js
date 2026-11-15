@@ -24,5 +24,7 @@ export const fetchTracesMetrics = async () => (await api.get('/traces-metrics'))
 export const fetchAlertsMetrics = async () => (await api.get('/alerts-metrics')).data;
 export const fetchSecurityMetrics = async () => (await api.get('/security-metrics')).data;
 export const fetchCostMetrics = async () => (await api.get('/cost-metrics')).data;
-export const fetchAWSMetrics = async () => (await api.get('/aws-metrics')).data; // Naya AWS fetch
+export const fetchAWSMetrics = async () => (await api.get('/aws-metrics')).data;
+export const fetchGCPMetrics = async () => (await api.get('/gcp-metrics')).data;
+export const fetchAzureMetrics = async () => (await api.get('/azure-metrics')).data;
 export const login = async (username, password) => (await api.post('/login', { username, password })).data;

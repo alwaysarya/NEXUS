@@ -28,7 +28,12 @@ func main() {
 	mux.HandleFunc("/api/health", api.CustomHealthHandler)
 	mux.Handle("/metrics", promhttp.Handler())
 
-	// Directly register all APIs (No Auth for testing)
+	// Naye Providers
+	mux.HandleFunc("/api/aws-metrics", api.AWSHandler)
+	mux.HandleFunc("/api/gcp-metrics", api.GCPHandler)
+	mux.HandleFunc("/api/azure-metrics", api.AzureHandler)
+
+	// Baaki routes
 	mux.HandleFunc("/api/nodes", api.CustomNodesHandler)
 	mux.HandleFunc("/api/predict", api.AIPredictHandler)
 	mux.HandleFunc("/api/deployments", api.DeploymentsHandler)
@@ -46,9 +51,8 @@ func main() {
 	mux.HandleFunc("/api/alerts-metrics", api.AlertsMetricsHandler)
 	mux.HandleFunc("/api/security-metrics", api.SecurityMetricsHandler)
 	mux.HandleFunc("/api/cost-metrics", api.CostMetricsHandler)
-	mux.HandleFunc("/api/aws-metrics", api.AWSHandler) // AWS Route
 
 	handler := CORS(mux)
-	fmt.Println("🚀 Control Plane running on :8080 (Auth Disabled for Testing)")
+	fmt.Println("🚀 Control Plane running on :8080")
 	log.Fatal(http.ListenAndServe(":8080", handler))
 }
