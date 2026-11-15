@@ -37,7 +37,7 @@ export default function WorkloadsPage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-4 gap-4">
         {[
           { label: 'Total Workloads', value: '36', icon: Layers, color: 'text-blue-500' },
           { label: 'Running Pods', value: '142', icon: Activity, color: 'text-green-500' },

@@ -74,7 +74,7 @@ export default function ClustersPage() {
               <MetricCard title="CPU Usage" value="42.8%" subtitle="314 / 736 vCPU" showGraph={true} color="#22c55e" />
               <MetricCard title="Memory Usage" value="67.2%" subtitle="1.27 / 1.89 TiB" showGraph={true} color="#8b5cf6" />
             </div>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-3 gap-4">
               <div className="col-span-2 bg-surface border border-border rounded-xl p-4 flex flex-col">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-sm font-medium text-white">Cluster Topology <span className="text-xs text-green-500 bg-green-500/10 px-1.5 py-0.5 rounded ml-2">Live</span></h3>

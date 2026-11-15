@@ -29,7 +29,7 @@ export default function CostPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-4 gap-4">
         {[
           { label: 'Total Spend (MTD)', value: `$${totalCost.toFixed(2)}`, change: '+12.5%', icon: CreditCard, color: '#6366f1' },
           { label: 'Forecasted Spend', value: '$1,620.00', change: '+3.2%', icon: TrendingUp, color: '#f59e0b' },
@@ -48,7 +48,7 @@ export default function CostPage() {
         ))}
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-3 gap-4">
         <div className="col-span-2 bg-surface border border-border rounded-xl p-4">
           <div className="flex justify-between items-center mb-4"><h3 className="text-sm font-medium text-white">Cost Trend</h3></div>
           <div className="h-64">

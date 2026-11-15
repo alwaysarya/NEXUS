@@ -73,7 +73,7 @@ export default function ObservabilityPage() {
 
       {currentTab === 'overview' || currentTab === 'metrics' ? (
         <>
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-4 gap-4">
             {[
               { title: 'CPU Utilization', value: '42.8%', change: '-12.4%', color: '#22c55e' },
               { title: 'Memory Usage', value: '67.2%', change: '+3.8%', color: '#f97316' },
@@ -97,7 +97,7 @@ export default function ObservabilityPage() {
 
           {currentTab === 'overview' && (
             <>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="col-span-2 bg-surface border border-border rounded-xl p-4">
                   <div className="flex justify-between items-center mb-4">
                     <h3 className="text-sm font-medium text-white">Service Performance</h3>
@@ -170,7 +170,7 @@ export default function ObservabilityPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="col-span-1 bg-surface border border-border rounded-xl p-4">
                   <div className="flex justify-between items-center mb-4">
                     <h3 className="text-sm font-medium text-white">Latency Heatmap</h3>
@@ -233,7 +233,7 @@ export default function ObservabilityPage() {
                 <h3 className="text-lg font-medium text-white">Detailed Metrics</h3>
                 <span className="text-xs text-gray-400 border border-border px-2 py-1 rounded">Last 15 min</span>
               </div>
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-2 gap-6">
                  <div className="space-y-4">
                    <div className="flex justify-between text-sm text-gray-300"><span>CPU Utilization</span><span>42.8%</span></div>
                    <div className="w-full bg-border rounded-full h-3"><div className="bg-green-500 h-3 rounded-full" style={{width: '42.8%'}}></div></div>

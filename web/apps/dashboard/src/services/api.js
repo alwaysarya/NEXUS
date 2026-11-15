@@ -19,4 +19,5 @@ export const fetchNetworking = async () => (await api.get('/networking')).data;
 export const fetchStorage = async () => (await api.get('/storage')).data;
 export const fetchCost = async () => (await api.get('/cost')).data;
 export const fetchAutomation = async () => (await api.get('/automation')).data;
+export const fetchRealMetrics = async () => (await api.get('/real-metrics')).data;
 export const login = async (username, password) => (await api.post('/login', { username, password })).data;

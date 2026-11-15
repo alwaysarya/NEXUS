@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Sidebar from './components/layout/Sidebar';
 import Header from './components/layout/Header';
@@ -14,6 +15,7 @@ import AutomationPage from './components/AutomationPage';
 import LoginPage from './components/LoginPage';
 
 function App() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const token = localStorage.getItem('nexus_token');
 
   if (!token) {
@@ -26,9 +28,9 @@ function App() {
 
   return (
     <div className="flex h-screen bg-background text-white overflow-hidden">
-      <Sidebar />
+      <Sidebar isOpen={isSidebarOpen} closeSidebar={() => setIsSidebarOpen(false)} />
       <div className="flex-1 flex flex-col min-w-0">
-        <Header />
+        <Header toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
         <main className="flex-1 overflow-hidden">
           <Routes>
             <Route path="/" element={<Navigate to="/overview" replace />} />

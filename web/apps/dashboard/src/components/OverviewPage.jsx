@@ -1,5 +1,7 @@
+import { useState, useEffect } from 'react';
 import { Activity, Box, Server, Shield, AlertTriangle, Layers, ChevronRight } from 'lucide-react';
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { fetchRealMetrics } from '../services/api';
 
 const chartData = [
   { time: '00:00', req: 40, err: 2 }, { time: '04:00', req: 60, err: 4 },
@@ -8,6 +10,12 @@ const chartData = [
 ];
 
 export default function OverviewPage() {
+  const [metrics, setMetrics] = useState(null);
+
+  useEffect(() => {
+    fetchRealMetrics().then(setMetrics).catch(console.error);
+  }, []);
+
   return (
     <div className="flex flex-col gap-6 p-6 overflow-y-auto h-full w-full">
       <div>
@@ -15,13 +23,13 @@ export default function OverviewPage() {
         <p className="text-sm text-gray-400 mt-1">Global summary of your cloud infrastructure and services.</p>
       </div>
 
-      {/* Metrics Row */}
-      <div className="grid grid-cols-4 gap-4">
+      {/* Metrics Row - Real Data */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Total Clusters', value: '4', sub: '1 Production', icon: Box, color: 'text-blue-500' },
-          { label: 'Running Workloads', value: '148', sub: 'Across all clusters', icon: Layers, color: 'text-purple-500' },
-          { label: 'Active Incidents', value: '2', sub: 'Requires attention', icon: AlertTriangle, color: 'text-red-500' },
-          { label: 'Security Score', value: '96.8%', sub: 'Excellent standing', icon: Shield, color: 'text-green-500' },
+          { label: 'CPU Usage', value: metrics ? `${metrics.cpu.usage.toFixed(1)}%` : '...', sub: `${metrics ? metrics.cpu.cores : '...'} cores`, icon: Box, color: 'text-blue-500' },
+          { label: 'Memory Used', value: metrics ? `${(metrics.memory.used / (1024*1024*1024)).toFixed(1)} GB` : '...', sub: `${metrics ? (metrics.memory.usage_percent).toFixed(1) : '...'}%`, icon: Layers, color: 'text-purple-500' },
+          { label: 'OS', value: metrics ? metrics.host.platform : '...', sub: metrics ? metrics.host.os : '...', icon: Server, color: 'text-green-500' },
+          { label: 'Uptime', value: metrics ? `${(metrics.host.uptime / 3600).toFixed(1)} hrs` : '...', sub: 'System Uptime', icon: Shield, color: 'text-yellow-500' },
         ].map((m) => (
           <div key={m.label} className="bg-surface border border-border rounded-xl p-4 flex flex-col justify-between">
             <div className="flex items-center justify-between text-sm text-gray-400">
@@ -36,9 +44,9 @@ export default function OverviewPage() {
         ))}
       </div>
 
-      {/* Main Charts */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="col-span-2 bg-surface border border-border rounded-xl p-4 flex flex-col">
+      {/* Main Charts - Real Data */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2 bg-surface border border-border rounded-xl p-4 flex flex-col">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-sm font-medium text-white">Global Traffic Overview</h3>
             <span className="text-xs text-gray-400 border border-border px-2 py-1 rounded">Last 24 hours</span>
@@ -68,10 +76,9 @@ export default function OverviewPage() {
           </div>
           <div className="flex-1 flex flex-col justify-center gap-4">
             {[
-              { name: 'API Gateway', status: 'Healthy', val: '99.99%' },
-              { name: 'Database Cluster', status: 'Healthy', val: '99.95%' },
-              { name: 'Auth Service', status: 'Healthy', val: '99.98%' },
-              { name: 'Storage Nodes', status: 'Degraded', val: '98.50%' },
+              { name: 'CPU Cores', status: 'Healthy', val: metrics ? metrics.cpu.cores : '...' },
+              { name: 'Memory', status: metrics && metrics.memory.usage_percent > 80 ? 'Degraded' : 'Healthy', val: metrics ? `${(metrics.memory.usage_percent).toFixed(1)}%` : '...' },
+              { name: 'Platform', status: 'Healthy', val: metrics ? metrics.host.platform : '...' },
             ].map((sys) => (
               <div key={sys.name} className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -100,12 +107,12 @@ export default function OverviewPage() {
             { id: 'v2.8.3', msg: 'Add request caching', author: 'Rahul Singh', time: '1d ago', status: 'Succeeded', env: 'Production' },
             { id: 'v2.8.2', msg: 'Fix session timeout', author: 'Priya Sharma', time: '3d ago', status: 'Succeeded', env: 'Staging' },
           ].map((dep) => (
-            <div key={dep.id} className="flex items-center justify-between p-3 bg-background border border-border rounded-lg">
+            <div key={dep.id} className="flex flex-col md:flex-row md:items-center justify-between p-3 bg-background border border-border rounded-lg gap-2">
               <div className="flex items-center gap-4">
                 <div className="text-sm font-medium text-white">{dep.id}</div>
                 <div className="text-sm text-gray-300">{dep.msg}</div>
               </div>
-              <div className="flex items-center gap-6 text-xs text-gray-500">
+              <div className="flex items-center gap-4 text-xs text-gray-500">
                 <span>{dep.env}</span>
                 <span>{dep.author}</span>
                 <span>{dep.time}</span>

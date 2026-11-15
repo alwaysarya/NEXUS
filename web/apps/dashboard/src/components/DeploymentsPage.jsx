@@ -86,7 +86,7 @@ export default function DeploymentsPage() {
       </div>
 
       {/* 3 Column Layout */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-3 gap-4">
         {/* Left: Release Notes */}
         <div className="bg-surface border border-border rounded-xl p-4 flex flex-col gap-4">
           <div className="flex justify-between items-center">
@@ -95,7 +95,7 @@ export default function DeploymentsPage() {
           </div>
           <p className="text-xs text-gray-400">Production deployment in progress</p>
           
-          <div className="grid grid-cols-2 gap-4 text-xs mt-2">
+          <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-2 gap-4 text-xs mt-2">
             <div><span className="text-gray-500 block">Commit</span><span className="text-gray-200 flex items-center gap-1">c9f3a7e <Copy size={10}/></span></div>
             <div><span className="text-gray-500 block">Branch</span><span className="text-gray-200">main</span></div>
             <div><span className="text-gray-500 block">Author</span><span className="text-gray-200">Aman Verma</span></div>

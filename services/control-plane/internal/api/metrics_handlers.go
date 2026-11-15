@@ -1,18 +1,35 @@
 package api
 
 import (
+	"encoding/json"
 	"net/http"
-
-	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/shirou/gopsutil/v3/cpu"
+	"github.com/shirou/gopsutil/v3/mem"
+	"github.com/shirou/gopsutil/v3/host"
 )
 
-type MetricsHandler struct{}
+func RealMetricsHandler(w http.ResponseWriter, r *http.Request) {
+	cpuPercent, _ := cpu.Percent(0, false)
+	vmStat, _ := mem.VirtualMemory()
+	hostInfo, _ := host.Info()
 
-func NewMetricsHandler() *MetricsHandler {
-	return &MetricsHandler{}
-}
+	metrics := map[string]interface{}{
+		"cpu": map[string]interface{}{
+			"usage":  cpuPercent[0],
+			"cores":  len(cpuPercent),
+		},
+		"memory": map[string]interface{}{
+			"total":       vmStat.Total,
+			"used":        vmStat.Used,
+			"usage_percent": vmStat.UsedPercent,
+		},
+		"host": map[string]interface{}{
+			"os":       hostInfo.OS,
+			"platform": hostInfo.Platform,
+			"uptime":   hostInfo.Uptime,
+		},
+	}
 
-func (h *MetricsHandler) ServeMetrics(w http.ResponseWriter, r *http.Request) {
-	// Ye handler Prometheus ko saare system metrics (CPU, Memory, Go Routines, HTTP requests) dega
-	promhttp.Handler().ServeHTTP(w, r)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(metrics)
 }

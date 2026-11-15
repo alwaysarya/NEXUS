@@ -19,7 +19,7 @@ export default function NetworkingPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-surface border border-border rounded-xl p-4 flex flex-col">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-sm font-medium text-white">Ingress Endpoints</h3>

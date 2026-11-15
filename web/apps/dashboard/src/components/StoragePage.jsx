@@ -19,7 +19,7 @@ export default function StoragePage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-4 gap-4">
         {[
           { label: 'Total Storage', value: '10.0 TiB', icon: HardDrive, color: 'text-blue-500' },
           { label: 'Used Storage', value: '5.81 TiB', icon: Database, color: 'text-purple-500' },

@@ -59,6 +59,7 @@ func main() {
 	protectedMux.HandleFunc("/api/storage", api.StorageHandler)
 	protectedMux.HandleFunc("/api/cost", api.CostHandler)
 	protectedMux.HandleFunc("/api/automation", api.AutomationHandler)
+	protectedMux.HandleFunc("/api/real-metrics", api.RealMetricsHandler)
 	mux.Handle("/api/", AuthMiddleware(protectedMux))
 
 	handler := CORS(mux)

@@ -23,7 +23,7 @@ export default function AutomationPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-4 gap-4">
         {[
           { label: 'Total Scripts', value: '12', icon: Terminal, color: 'text-blue-500' },
           { label: 'Active Jobs', value: '8', icon: Play, color: 'text-green-500' },

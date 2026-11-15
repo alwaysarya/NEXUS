@@ -66,7 +66,7 @@ export default function SecurityPage() {
 
       {currentTab === 'overview' && (
         <>
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-4 gap-4">
             {[
               { label: 'Active Threats', value: '7', change: '+2', icon: ShieldAlert, color: '#ef4444' },
               { label: 'Security Incidents', value: '18', change: '+5', icon: AlertTriangle, color: '#f97316' },
@@ -80,7 +80,7 @@ export default function SecurityPage() {
             ))}
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-3 gap-4">
             <div className="col-span-2 bg-surface border border-border rounded-xl p-4 flex flex-col gap-4">
               <div className="flex justify-between items-center">
                 <h3 className="text-sm font-medium text-white">Threat Overview</h3>
@@ -104,7 +104,7 @@ export default function SecurityPage() {
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 gap-4 mt-2">
+              <div className="grid grid-cols-1 md:grid-cols-1 md:grid-cols-2 gap-4 mt-2">
                 <div>
                   <h4 className="text-xs text-gray-400 mb-2">Access Activity</h4>
                   <div className="flex gap-4 text-[10px] text-gray-400 mb-2"><span className="flex items-center gap-1"><span className="w-1.5 h-1.5 bg-green-500 rounded-sm"></span> Successful</span><span className="flex items-center gap-1"><span className="w-1.5 h-1.5 bg-red-500 rounded-sm"></span> Failed</span></div>
