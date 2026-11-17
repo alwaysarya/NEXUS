@@ -57,7 +57,7 @@ export default function OverviewPage() {
             <div><h3 className="text-white font-semibold">AWS Cloud</h3><p className="text-xs text-gray-500">Amazon Web Services</p></div>
           </div>
           <div className="flex items-end justify-between z-10">
-            <div><div className="text-4xl font-bold text-white">{aws?.status?.includes("connected") ? '1' : '0'}</div><div className="text-xs text-gray-400 mt-1 font-medium">Connected</div></div>
+            <div><div className="text-4xl font-bold text-white">{aws?.s3_buckets ?? '0'}</div><div className="text-xs text-gray-400 mt-1 font-medium">S3 Buckets</div></div>
             <span className="text-[10px] px-2.5 py-1 rounded-full border text-green-500 border-green-500/20 bg-green-500/10 font-semibold tracking-wide flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>Connected
             </span>
@@ -71,9 +71,9 @@ export default function OverviewPage() {
             <div><h3 className="text-white font-semibold">Google Cloud</h3><p className="text-xs text-gray-500">GCP Platform</p></div>
           </div>
           <div className="flex items-end justify-between z-10">
-            <div><div className="text-4xl font-bold text-white">{gcp?.connected ? '1' : '0'}</div><div className="text-xs text-gray-400 mt-1 font-medium">Projects</div></div>
-            <span className="text-[10px] px-2.5 py-1 rounded-full border text-green-500 border-green-500/20 bg-green-500/10 font-semibold tracking-wide flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>Connected
+            <div><div className="text-4xl font-bold text-white">0</div><div className="text-xs text-gray-400 mt-1 font-medium">Projects</div></div>
+            <span className="text-[10px] px-2.5 py-1 rounded-full border text-red-500 border-red-500/20 bg-red-500/10 font-semibold tracking-wide flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>Not Connected
             </span>
           </div>
         </div>
@@ -85,9 +85,9 @@ export default function OverviewPage() {
             <div><h3 className="text-white font-semibold">Microsoft Azure</h3><p className="text-xs text-gray-500">Azure Cloud</p></div>
           </div>
           <div className="flex items-end justify-between z-10">
-            <div><div className="text-4xl font-bold text-white">{azure?.connected ? '1' : '0'}</div><div className="text-xs text-gray-400 mt-1 font-medium">Virtual Machines</div></div>
-            <span className="text-[10px] px-2.5 py-1 rounded-full border text-green-500 border-green-500/20 bg-green-500/10 font-semibold tracking-wide flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>Connected
+            <div><div className="text-4xl font-bold text-white">0</div><div className="text-xs text-gray-400 mt-1 font-medium">Virtual Machines</div></div>
+            <span className="text-[10px] px-2.5 py-1 rounded-full border text-red-500 border-red-500/20 bg-red-500/10 font-semibold tracking-wide flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>Not Connected
             </span>
           </div>
         </div>
@@ -101,7 +101,7 @@ export default function OverviewPage() {
           </div>
           <div className="h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={trafficData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+              <AreaChart data={trafficData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorRecv" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#6366f1" stopOpacity={0.4}/>
@@ -155,14 +155,24 @@ export default function OverviewPage() {
 
             <div className="mt-2 pt-4 border-t border-border">
               <div className="text-xs text-gray-500 mb-3 font-semibold tracking-wider uppercase">Cloud Providers</div>
-              {[{name: 'AWS', stat: aws?.status || 'Connected'}, {name: 'GCP', stat: gcp?.status || 'Connected'}, {name: 'Azure', stat: azure?.status || 'Connected'}].map((p) => (
-                <div key={p.name} className="flex items-center justify-between mb-2 last:mb-0">
-                  <span className="text-sm text-gray-300">{p.name}</span>
-                  <span className={`text-xs flex items-center gap-1.5 font-medium text-green-500`}>
-                    <span className={`w-1.5 h-1.5 rounded-full bg-green-500`}></span>{p.stat}
-                  </span>
-                </div>
-              ))}
+              <div className="flex items-center justify-between mb-2 last:mb-0">
+                <span className="text-sm text-gray-300">AWS</span>
+                <span className="text-xs flex items-center gap-1.5 font-medium text-green-500">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>Connected (limited)
+                </span>
+              </div>
+              <div className="flex items-center justify-between mb-2 last:mb-0">
+                <span className="text-sm text-gray-300">GCP</span>
+                <span className="text-xs flex items-center gap-1.5 font-medium text-red-500">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>Disconnected
+                </span>
+              </div>
+              <div className="flex items-center justify-between mb-2 last:mb-0">
+                <span className="text-sm text-gray-300">Azure</span>
+                <span className="text-xs flex items-center gap-1.5 font-medium text-red-500">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>Disconnected
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -175,9 +185,9 @@ export default function OverviewPage() {
         </div>
         <div className="space-y-3">
           {[
-            { id: 'v2.8.4', msg: 'Improve API response time', author: 'Aman Verma', time: '2h ago', status: 'Deploying', env: 'Production' },
-            { id: 'v2.8.3', msg: 'Add request caching', author: 'Rahul Singh', time: '1d ago', status: 'Succeeded', env: 'Production' },
-            { id: 'v2.8.2', msg: 'Fix session timeout', author: 'Priya Sharma', time: '3d ago', status: 'Succeeded', env: 'Staging' },
+            { id: 'a1b2c3d', msg: 'feat: added real dashboard logic', author: 'Aryan', time: 'Just now', status: 'Succeeded', env: 'Production' },
+            { id: 'x9y8z7w', msg: 'fix: updated UI components', author: 'Aryan', time: '1 day ago', status: 'Succeeded', env: 'Production' },
+            { id: 'm4n5o6p', msg: 'chore: initial setup', author: 'Aryan', time: '3 days ago', status: 'Succeeded', env: 'Staging' },
           ].map((dep) => (
             <div key={dep.id} className="flex flex-col md:flex-row md:items-center justify-between p-4 bg-background border border-border rounded-xl gap-3 hover:border-gray-600 transition-colors">
               <div className="flex items-center gap-4">

@@ -1,36 +1,30 @@
-import axios from 'axios';
+const API_URL = 'http://127.0.0.1:8080/api';
 
-const api = axios.create({ baseURL: 'http://localhost:8080/api' });
+export const fetchNodes = async () => (await fetch(`${API_URL}/nodes`)).json();
+export const fetchRealMetrics = async (env, region) => (await fetch(`${API_URL}/real-metrics?env=${env}&region=${region}`)).json();
+export const fetchAWSMetrics = async () => (await fetch(`${API_URL}/aws-metrics`)).json();
+export const fetchGCPMetrics = async () => (await fetch(`${API_URL}/gcp-metrics`)).json();
+export const fetchAzureMetrics = async () => (await fetch(`${API_URL}/azure-metrics`)).json();
+export const fetchTrafficHistory = async () => (await fetch(`${API_URL}/traffic-metrics`)).json();
+export const fetchDeployments = async () => (await fetch(`${API_URL}/deployments`)).json();
 
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('nexus_token');
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
-});
+// Baaki pages ke functions (jo error de rahe the)
+export const fetchSecurityMetrics = async () => (await fetch(`${API_URL}/security-metrics`)).json();
+export const fetchNetworkingMetrics = async () => (await fetch(`${API_URL}/network-metrics`)).json();
+export const fetchStorageMetrics = async () => (await fetch(`${API_URL}/storage-metrics`)).json();
+export const fetchObservabilityMetrics = async () => (await fetch(`${API_URL}/observability-metrics`)).json();
+export const fetchAutomationMetrics = async () => (await fetch(`${API_URL}/automation-metrics`)).json();
+export const fetchCostMetrics = async () => (await fetch(`${API_URL}/cost-metrics`)).json();
+export const fetchAlertsMetrics = async () => (await fetch(`${API_URL}/alerts-metrics`)).json();
+export const fetchTracesMetrics = async () => (await fetch(`${API_URL}/traces-metrics`)).json();
+export const fetchWorkloads = async () => (await fetch(`${API_URL}/workloads`)).json();
+export const fetchNetworking = async () => (await fetch(`${API_URL}/networking`)).json();
+export const fetchStorage = async () => (await fetch(`${API_URL}/storage`)).json();
+export const fetchCost = async () => (await fetch(`${API_URL}/cost`)).json();
+export const fetchAutomation = async () => (await fetch(`${API_URL}/automation`)).json();
+export const fetchPredict = async () => (await fetch(`${API_URL}/predict`)).json();
 
-export const fetchNodes = async () => (await api.get('/nodes')).data;
-export const fetchDeployments = async () => (await api.get('/deployments')).data;
-export const fetchWorkloads = async () => (await api.get('/workloads')).data;
-export const fetchNetworking = async () => (await api.get('/networking')).data;
-export const fetchStorage = async () => (await api.get('/storage')).data;
-export const fetchCost = async () => (await api.get('/cost')).data;
-export const fetchAutomation = async () => (await api.get('/automation')).data;
-export const fetchRealMetrics = async (env = 'production', region = 'us-east-1') => (await api.get(`/real-metrics?env=${env}&region=${region}`)).data;
-export const fetchNetworkMetrics = async () => (await api.get('/network-metrics')).data;
-export const fetchStorageMetrics = async () => (await api.get('/storage-metrics')).data;
-export const fetchObservabilityMetrics = async () => (await api.get('/observability-metrics')).data;
-export const fetchAutomationMetrics = async () => (await api.get('/automation-metrics')).data;
-export const fetchTracesMetrics = async () => (await api.get('/traces-metrics')).data;
-export const fetchAlertsMetrics = async () => (await api.get('/alerts-metrics')).data;
-export const fetchSecurityMetrics = async () => (await api.get('/security-metrics')).data;
-export const fetchCostMetrics = async () => (await api.get('/cost-metrics')).data;
-export const fetchAWSMetrics = async () => (await api.get('/aws-metrics')).data;
-export const fetchGCPMetrics = async () => (await api.get('/gcp-metrics')).data;
-export const fetchAzureMetrics = async () => (await api.get('/azure-metrics')).data;
-export const login = async (username, password) => (await api.post('/login', { username, password })).data;
-
-export const fetchTrafficHistory = async () => {
-  const res = await fetch('http://localhost:8080/api/traffic-metrics');
-  if (!res.ok) throw new Error('Failed to fetch traffic');
-  return res.json();
-};
+export const fetchNetworkMetrics = async () => (await fetch(`${API_URL}/network-metrics`)).json();
+export const fetchStorageMetrics2 = async () => (await fetch(`${API_URL}/storage-metrics`)).json();
+export const fetchSecurity = async () => (await fetch(`${API_URL}/security-metrics`)).json();
+export const fetchClusters = async () => (await fetch(`${API_URL}/nodes`)).json();
