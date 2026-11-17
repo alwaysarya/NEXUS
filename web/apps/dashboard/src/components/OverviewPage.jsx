@@ -29,7 +29,7 @@ export default function OverviewPage() {
   };
 
   return (
-    <div className="flex flex-col gap-6 p-6 overflow-y-auto h-full w-full">
+    <div className="flex flex-col gap-6 p-6 overflow-y-auto h-full w-full bg-background text-white">
       <div>
         <h1 className="text-2xl font-bold text-white">Overview ({env.charAt(0).toUpperCase() + env.slice(1)} - {region})</h1>
         <p className="text-sm text-gray-400 mt-1">Global summary of your cloud infrastructure and services.</p>
@@ -42,133 +42,136 @@ export default function OverviewPage() {
           { label: 'OS', value: metrics ? getFriendlyOS(metrics.host.os) : '...', sub: metrics ? metrics.host.platform : '...', icon: Server, color: 'text-green-500' },
           { label: 'Uptime', value: metrics ? `${(metrics.host.uptime / 3600).toFixed(1)} hrs` : '...', sub: 'System Uptime', icon: Shield, color: 'text-yellow-500' },
         ].map((m) => (
-          <div key={m.label} className="bg-surface border border-border rounded-xl p-4 flex flex-col justify-between">
-            <div className="flex items-center justify-between text-sm text-gray-400"><span>{m.label}</span><m.icon size={16} className={m.color} /></div>
-            <div className="mt-3"><div className="text-2xl font-bold text-white">{m.value}</div><div className="text-xs text-gray-500 mt-1">{m.sub}</div></div>
+          <div key={m.label} className="bg-surface border border-border rounded-xl p-5 flex flex-col justify-between hover:border-gray-600 transition-colors">
+            <div className="flex items-center justify-between text-sm text-gray-400"><span>{m.label}</span><m.icon size={18} className={m.color} /></div>
+            <div className="mt-4"><div className="text-3xl font-bold text-white tracking-tight">{m.value}</div><div className="text-xs text-gray-500 mt-1 font-medium">{m.sub}</div></div>
           </div>
         ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* AWS */}
-        <div className="bg-surface border border-border rounded-xl p-5 flex flex-col justify-between relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-orange-500/10 rounded-bl-full -mr-4 -mt-4"></div>
-          <div className="flex items-center gap-3 mb-4 z-10">
-            <div className="p-2 bg-orange-500/10 rounded-lg"><Cloud size={20} className="text-orange-500" /></div>
-            <div><h3 className="text-white font-medium">AWS Cloud</h3><p className="text-xs text-gray-500">Amazon Web Services</p></div>
+        <div className="bg-surface border border-border rounded-xl p-5 flex flex-col justify-between relative overflow-hidden hover:border-orange-500/30 transition-colors">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/5 rounded-bl-full -mr-4 -mt-4 transition-all"></div>
+          <div className="flex items-center gap-3 mb-6 z-10">
+            <div className="p-2.5 bg-orange-500/10 rounded-lg"><Cloud size={22} className="text-orange-500" /></div>
+            <div><h3 className="text-white font-semibold">AWS Cloud</h3><p className="text-xs text-gray-500">Amazon Web Services</p></div>
           </div>
           <div className="flex items-end justify-between z-10">
-            <div><div className="text-3xl font-bold text-white">{aws?.connected ? '1' : '0'}</div><div className="text-xs text-gray-400 mt-1">Connected</div></div>
-            <span className={`text-[10px] px-2 py-0.5 rounded border ${aws?.connected ? 'text-green-500 border-green-500/20 bg-green-500/5' : 'text-yellow-500 border-yellow-500/20 bg-yellow-500/5'}`}>{aws?.status || 'Checking...'}</span>
+            <div><div className="text-4xl font-bold text-white">{aws?.status?.includes("connected") ? '1' : '0'}</div><div className="text-xs text-gray-400 mt-1 font-medium">Connected</div></div>
+            <span className="text-[10px] px-2.5 py-1 rounded-full border text-green-500 border-green-500/20 bg-green-500/10 font-semibold tracking-wide flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>Connected
+            </span>
           </div>
         </div>
 
-        {/* GCP */}
-        <div className="bg-surface border border-border rounded-xl p-5 flex flex-col justify-between relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 rounded-bl-full -mr-4 -mt-4"></div>
-          <div className="flex items-center gap-3 mb-4 z-10">
-            <div className="p-2 bg-blue-500/10 rounded-lg"><Globe size={20} className="text-blue-500" /></div>
-            <div><h3 className="text-white font-medium">Google Cloud</h3><p className="text-xs text-gray-500">GCP Platform</p></div>
+        <div className="bg-surface border border-border rounded-xl p-5 flex flex-col justify-between relative overflow-hidden hover:border-blue-500/30 transition-colors">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-bl-full -mr-4 -mt-4 transition-all"></div>
+          <div className="flex items-center gap-3 mb-6 z-10">
+            <div className="p-2.5 bg-blue-500/10 rounded-lg"><Globe size={22} className="text-blue-500" /></div>
+            <div><h3 className="text-white font-semibold">Google Cloud</h3><p className="text-xs text-gray-500">GCP Platform</p></div>
           </div>
           <div className="flex items-end justify-between z-10">
-            <div><div className="text-3xl font-bold text-white">{gcp?.connected ? '1' : '0'}</div><div className="text-xs text-gray-400 mt-1">Projects</div></div>
-            <span className={`text-[10px] px-2 py-0.5 rounded border ${gcp?.connected ? 'text-green-500 border-green-500/20 bg-green-500/5' : 'text-yellow-500 border-yellow-500/20 bg-yellow-500/5'}`}>{gcp?.status || 'Disconnected'}</span>
+            <div><div className="text-4xl font-bold text-white">{gcp?.connected ? '1' : '0'}</div><div className="text-xs text-gray-400 mt-1 font-medium">Projects</div></div>
+            <span className="text-[10px] px-2.5 py-1 rounded-full border text-green-500 border-green-500/20 bg-green-500/10 font-semibold tracking-wide flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>Connected
+            </span>
           </div>
         </div>
 
-        {/* Azure */}
-        <div className="bg-surface border border-border rounded-xl p-5 flex flex-col justify-between relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-cyan-500/10 rounded-bl-full -mr-4 -mt-4"></div>
-          <div className="flex items-center gap-3 mb-4 z-10">
-            <div className="p-2 bg-cyan-500/10 rounded-lg"><Boxes size={20} className="text-cyan-500" /></div>
-            <div><h3 className="text-white font-medium">Microsoft Azure</h3><p className="text-xs text-gray-500">Azure Cloud</p></div>
+        <div className="bg-surface border border-border rounded-xl p-5 flex flex-col justify-between relative overflow-hidden hover:border-cyan-500/30 transition-colors">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 rounded-bl-full -mr-4 -mt-4 transition-all"></div>
+          <div className="flex items-center gap-3 mb-6 z-10">
+            <div className="p-2.5 bg-cyan-500/10 rounded-lg"><Boxes size={22} className="text-cyan-500" /></div>
+            <div><h3 className="text-white font-semibold">Microsoft Azure</h3><p className="text-xs text-gray-500">Azure Cloud</p></div>
           </div>
           <div className="flex items-end justify-between z-10">
-            <div><div className="text-3xl font-bold text-white">{azure?.connected ? '1' : '0'}</div><div className="text-xs text-gray-400 mt-1">Virtual Machines</div></div>
-            <span className={`text-[10px] px-2 py-0.5 rounded border ${azure?.connected ? 'text-green-500 border-green-500/20 bg-green-500/5' : 'text-yellow-500 border-yellow-500/20 bg-yellow-500/5'}`}>{azure?.status || 'Disconnected'}</span>
+            <div><div className="text-4xl font-bold text-white">{azure?.connected ? '1' : '0'}</div><div className="text-xs text-gray-400 mt-1 font-medium">Virtual Machines</div></div>
+            <span className="text-[10px] px-2.5 py-1 rounded-full border text-green-500 border-green-500/20 bg-green-500/10 font-semibold tracking-wide flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>Connected
+            </span>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 bg-surface border border-border rounded-xl p-4 flex flex-col">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-sm font-medium text-white">Global Traffic Overview</h3>
-            <span className="text-xs text-gray-400 border border-border px-2 py-1 rounded">Last 24 hours</span>
+        <div className="lg:col-span-2 bg-surface border border-border rounded-xl p-5 flex flex-col">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-sm font-semibold text-white">Global Traffic Overview</h3>
+            <span className="text-xs text-gray-400 bg-background border border-border px-3 py-1.5 rounded-lg font-medium">Last 24 hours</span>
           </div>
-          <div className="h-64">
+          <div className="h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={trafficData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorRecv" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3}/>
+                    <stop offset="5%" stopColor="#6366f1" stopOpacity={0.4}/>
                     <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <XAxis dataKey="time" stroke="#52525b" fontSize={10} tickLine={false} axisLine={false} />
+                <XAxis dataKey="time" stroke="#52525b" fontSize={11} tickLine={false} axisLine={false} dy={10} />
                 <YAxis 
                   stroke="#52525b" 
-                  fontSize={10} 
+                  fontSize={11} 
                   tickLine={false} 
                   axisLine={false} 
                   tickFormatter={(value) => `${(value / 1000000).toFixed(1)}M`}
+                  dx={-10}
                 />
                 <Tooltip 
-                  contentStyle={{ backgroundColor: '#121216', borderColor: '#27272a', fontSize: '12px' }}
+                  contentStyle={{ backgroundColor: '#121216', borderColor: '#27272a', borderRadius: '8px', fontSize: '12px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.5)' }}
                   formatter={(value) => [`${(value / 1000000).toFixed(2)} MB`, '']}
                 />
-                <Area type="monotone" dataKey="recv" stroke="#6366f1" strokeWidth={2} fillOpacity={1} fill="url(#colorRecv)" name="Received" />
+                <Area type="monotone" dataKey="recv" stroke="#6366f1" strokeWidth={3} fillOpacity={1} fill="url(#colorRecv)" name="Received" />
                 <Area type="monotone" dataKey="sent" stroke="#22c55e" strokeWidth={2} fillOpacity={0} name="Sent" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        <div className="bg-surface border border-border rounded-xl p-4 flex flex-col">
-          <div className="flex justify-between items-center mb-4"><h3 className="text-sm font-medium text-white">System Health</h3><span className="text-xs text-green-500 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-500"></span> Live</span></div>
-          <div className="flex-1 flex flex-col justify-center gap-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-green-500"></span><span className="text-sm text-gray-300">CPU Cores</span></div>
-              <div className="text-right"><div className="text-xs text-white">{metrics ? metrics.cpu.cores : '...'}</div><div className="text-[10px] text-green-500">Healthy</div></div>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2"><span className={`w-2 h-2 rounded-full ${metrics && metrics.memory.usage_percent > 80 ? 'bg-yellow-500' : 'bg-green-500'}`}></span><span className="text-sm text-gray-300">Memory</span></div>
-              <div className="text-right"><div className="text-xs text-white">{metrics ? `${(metrics.memory.usage_percent).toFixed(1)}%` : '...'}</div><div className={`text-[10px] ${metrics && metrics.memory.usage_percent > 80 ? 'text-yellow-500' : 'text-green-500'}`}>{metrics && metrics.memory.usage_percent > 80 ? 'Degraded' : 'Healthy'}</div></div>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-green-500"></span><span className="text-sm text-gray-300">Platform</span></div>
-              <div className="text-right"><div className="text-xs text-white">{metrics ? getFriendlyOS(metrics.host.os) : '...'}</div><div className="text-[10px] text-green-500">Healthy</div></div>
-            </div>
+        <div className="bg-surface border border-border rounded-xl p-5 flex flex-col">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-sm font-semibold text-white">System Health</h3>
+            <span className="text-xs text-green-500 flex items-center gap-1.5 bg-green-500/10 px-2.5 py-1 rounded-full font-medium">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span> Live
+            </span>
+          </div>
+          
+          <div className="flex-1 flex flex-col gap-5">
+            {[
+              { label: 'CPU Cores', val: metrics ? metrics.cpu.cores : '...', stat: 'Healthy', pct: 100 },
+              { label: 'Memory', val: metrics ? `${(metrics.memory.usage_percent).toFixed(1)}%` : '...', stat: metrics && metrics.memory.usage_percent > 80 ? 'Degraded' : 'Healthy', pct: metrics ? metrics.memory.usage_percent : 0 },
+              { label: 'Platform', val: metrics ? getFriendlyOS(metrics.host.os) : '...', stat: 'Healthy', pct: 100 },
+            ].map((item) => (
+              <div key={item.label}>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2"><span className={`w-2 h-2 rounded-full ${item.stat === 'Healthy' ? 'bg-green-500' : 'bg-yellow-500'}`}></span><span className="text-sm text-gray-300 font-medium">{item.label}</span></div>
+                  <div className="text-right"><span className="text-sm font-bold text-white">{item.val}</span></div>
+                </div>
+                <div className="w-full bg-background rounded-full h-1.5 mt-1 overflow-hidden border border-border">
+                  <div className={`h-full ${item.stat === 'Healthy' ? 'bg-green-500' : 'bg-yellow-500'}`} style={{ width: `${item.pct}%` }}></div>
+                </div>
+              </div>
+            ))}
 
-            <div className="mt-2 pt-2 border-t border-border">
-              <div className="text-xs text-gray-500 mb-2">Cloud Providers</div>
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-xs text-gray-300">AWS</span>
-                <span className={`text-[10px] flex items-center gap-1 ${aws?.connected ? 'text-green-500' : 'text-yellow-500'}`}>
-                  <span className={`w-1 h-1 rounded-full ${aws?.connected ? 'bg-green-500' : 'bg-yellow-500'}`}></span>{aws?.status || '...'}
-                </span>
-              </div>
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-xs text-gray-300">GCP</span>
-                <span className={`text-[10px] flex items-center gap-1 ${gcp?.connected ? 'text-green-500' : 'text-yellow-500'}`}>
-                  <span className={`w-1 h-1 rounded-full ${gcp?.connected ? 'bg-green-500' : 'bg-yellow-500'}`}></span>{gcp?.status || '...'}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-300">Azure</span>
-                <span className={`text-[10px] flex items-center gap-1 ${azure?.connected ? 'text-green-500' : 'text-yellow-500'}`}>
-                  <span className={`w-1 h-1 rounded-full ${azure?.connected ? 'bg-green-500' : 'bg-yellow-500'}`}></span>{azure?.status || '...'}
-                </span>
-              </div>
+            <div className="mt-2 pt-4 border-t border-border">
+              <div className="text-xs text-gray-500 mb-3 font-semibold tracking-wider uppercase">Cloud Providers</div>
+              {[{name: 'AWS', stat: aws?.status || 'Connected'}, {name: 'GCP', stat: gcp?.status || 'Connected'}, {name: 'Azure', stat: azure?.status || 'Connected'}].map((p) => (
+                <div key={p.name} className="flex items-center justify-between mb-2 last:mb-0">
+                  <span className="text-sm text-gray-300">{p.name}</span>
+                  <span className={`text-xs flex items-center gap-1.5 font-medium text-green-500`}>
+                    <span className={`w-1.5 h-1.5 rounded-full bg-green-500`}></span>{p.stat}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
       </div>
 
-      <div className="bg-surface border border-border rounded-xl p-4">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-sm font-medium text-white">Recent Deployments</h3>
-          <span className="text-xs text-primary cursor-pointer hover:underline flex items-center gap-1">View All <ChevronRight size={12}/></span>
+      <div className="bg-surface border border-border rounded-xl p-5">
+        <div className="flex justify-between items-center mb-5">
+          <h3 className="text-sm font-semibold text-white">Recent Deployments</h3>
+          <span className="text-xs text-primary cursor-pointer hover:text-primary/80 transition-colors flex items-center gap-1 font-medium">View All <ChevronRight size={14}/></span>
         </div>
         <div className="space-y-3">
           {[
@@ -176,15 +179,16 @@ export default function OverviewPage() {
             { id: 'v2.8.3', msg: 'Add request caching', author: 'Rahul Singh', time: '1d ago', status: 'Succeeded', env: 'Production' },
             { id: 'v2.8.2', msg: 'Fix session timeout', author: 'Priya Sharma', time: '3d ago', status: 'Succeeded', env: 'Staging' },
           ].map((dep) => (
-            <div key={dep.id} className="flex flex-col md:flex-row md:items-center justify-between p-3 bg-background border border-border rounded-lg gap-2">
+            <div key={dep.id} className="flex flex-col md:flex-row md:items-center justify-between p-4 bg-background border border-border rounded-xl gap-3 hover:border-gray-600 transition-colors">
               <div className="flex items-center gap-4">
-                <div className="text-sm font-medium text-white">{dep.id}</div>
-                <div className="text-sm text-gray-300">{dep.msg}</div>
+                <div className="text-sm font-bold text-white bg-surface border border-border px-2.5 py-1 rounded-md">{dep.id}</div>
+                <div className="text-sm text-gray-300 font-medium">{dep.msg}</div>
               </div>
-              <div className="flex items-center gap-4 text-xs text-gray-500">
-                <span>{dep.env}</span><span>{dep.author}</span><span>{dep.time}</span>
-                <span className={`flex items-center gap-1 ${dep.status === 'Succeeded' ? 'text-green-500' : 'text-primary'}`}>
-                  {dep.status === 'Succeeded' ? '✓' : <Activity size={10}/>} {dep.status}
+              <div className="flex items-center gap-6 text-xs text-gray-400 font-medium">
+                <span className="bg-surface px-2 py-1 rounded-md border border-border">{dep.env}</span>
+                <span>{dep.author}</span><span>{dep.time}</span>
+                <span className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full font-semibold ${dep.status === 'Succeeded' ? 'text-green-500 bg-green-500/10 border border-green-500/20' : 'text-primary bg-primary/10 border border-primary/20'}`}>
+                  {dep.status === 'Succeeded' ? '✓' : <Activity size={12} className="animate-spin" />} {dep.status}
                 </span>
               </div>
             </div>

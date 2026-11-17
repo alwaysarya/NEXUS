@@ -4,18 +4,39 @@ import (
 	"encoding/json"
 	"net/http"
 	"time"
+	"github.com/alwaysarya/nexus/services/control-plane/internal/database"
 )
 
 func TrafficHistoryHandler(w http.ResponseWriter, r *http.Request) {
-	data := []map[string]interface{}{}
-	now := time.Now()
-	for i := 23; i >= 0; i-- {
-		data = append(data, map[string]interface{}{
-			"time": now.Add(time.Duration(-i) * time.Hour).Format("15:04"),
-			"recv": 50000000.0 + float64(i*12345),
-			"sent": 20000000.0,
-		})
+	// Fetch last 24 hours of real data from the database
+	rows, err := database.DB.Query(r.Context(), `
+		SELECT recv_bytes, sent_bytes, recorded_at 
+		FROM traffic_history 
+		WHERE recorded_at >= NOW() - INTERVAL '24 hours'
+		ORDER BY recorded_at ASC
+	`)
+	
+	var data []map[string]interface{}
+	if err == nil {
+		defer rows.Close()
+		for rows.Next() {
+			var recv, sent int64
+			var recordedAt time.Time
+			if err := rows.Scan(&recv, &sent, &recordedAt); err == nil {
+				data = append(data, map[string]interface{}{
+					"time": recordedAt.Format("15:04"),
+					"recv": recv,
+					"sent": sent,
+				})
+			}
+		}
 	}
+	
+	// If no data in DB, send a flat line (or default)
+	if len(data) == 0 {
+		data = append(data, map[string]interface{}{"time": time.Now().Format("15:04"), "recv": 0, "sent": 0})
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(data)
 }
