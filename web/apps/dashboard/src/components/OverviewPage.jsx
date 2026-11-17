@@ -185,9 +185,9 @@ export default function OverviewPage() {
         </div>
         <div className="space-y-3">
           {[
-            { id: 'a1b2c3d', msg: 'feat: added real dashboard logic', author: 'Aryan', time: 'Just now', status: 'Succeeded', env: 'Production' },
-            { id: 'x9y8z7w', msg: 'fix: updated UI components', author: 'Aryan', time: '1 day ago', status: 'Succeeded', env: 'Production' },
-            { id: 'm4n5o6p', msg: 'chore: initial setup', author: 'Aryan', time: '3 days ago', status: 'Succeeded', env: 'Staging' },
+            { id: 'a1b2c3d', msg: 'feat: added real dashboard logic', author: 'Aryan', time: '18 Nov 04:37', status: 'Succeeded', env: 'Production' },
+            { id: 'x9y8z7w', msg: 'fix: updated UI components', author: 'Aryan', time: '17 Nov 04:37', status: 'Succeeded', env: 'Production' },
+            { id: 'm4n5o6p', msg: 'chore: initial setup', author: 'Aryan', time: '15 Nov 04:37', status: 'Succeeded', env: 'Staging' },
           ].map((dep) => (
             <div key={dep.id} className="flex flex-col md:flex-row md:items-center justify-between p-4 bg-background border border-border rounded-xl gap-3 hover:border-gray-600 transition-colors">
               <div className="flex items-center gap-4">
