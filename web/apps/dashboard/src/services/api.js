@@ -28,3 +28,9 @@ export const fetchAWSMetrics = async () => (await api.get('/aws-metrics')).data;
 export const fetchGCPMetrics = async () => (await api.get('/gcp-metrics')).data;
 export const fetchAzureMetrics = async () => (await api.get('/azure-metrics')).data;
 export const login = async (username, password) => (await api.post('/login', { username, password })).data;
+
+export const fetchTrafficHistory = async () => {
+  const res = await fetch('http://localhost:8080/api/traffic-metrics');
+  if (!res.ok) throw new Error('Failed to fetch traffic');
+  return res.json();
+};

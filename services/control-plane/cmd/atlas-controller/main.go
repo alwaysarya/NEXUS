@@ -51,6 +51,7 @@ func main() {
 	mux.HandleFunc("/api/alerts-metrics", api.AlertsMetricsHandler)
 	mux.HandleFunc("/api/security-metrics", api.SecurityMetricsHandler)
 	mux.HandleFunc("/api/cost-metrics", api.CostMetricsHandler)
+	mux.HandleFunc("/api/traffic-metrics", api.TrafficHistoryHandler)
 
 	handler := CORS(mux)
 	fmt.Println("🚀 Control Plane running on :8080")

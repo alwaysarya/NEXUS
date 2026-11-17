@@ -1,15 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Activity, Box, Server, Shield, Layers, ChevronRight, Cloud, Globe, Boxes } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { fetchRealMetrics, fetchAWSMetrics, fetchGCPMetrics, fetchAzureMetrics } from '../services/api';
-
-const chartData = [ { time: '00:00', req: 40 }, { time: '04:00', req: 60 }, { time: '08:00', req: 80 }, { time: '12:00', req: 100 }, { time: '16:00', req: 90 }, { time: '20:00', req: 110 } ];
+import { fetchRealMetrics, fetchAWSMetrics, fetchGCPMetrics, fetchAzureMetrics, fetchTrafficHistory } from '../services/api';
 
 export default function OverviewPage() {
   const [metrics, setMetrics] = useState(null);
   const [aws, setAws] = useState(null);
   const [gcp, setGcp] = useState(null);
   const [azure, setAzure] = useState(null);
+  const [trafficData, setTrafficData] = useState([]);
   
   const env = localStorage.getItem('nexus_env')?.toLowerCase() || 'production';
   const region = localStorage.getItem('nexus_region')?.split(' ')[0] || 'us-east-1';
@@ -19,7 +18,15 @@ export default function OverviewPage() {
     fetchAWSMetrics().then(setAws).catch(console.error);
     fetchGCPMetrics().then(setGcp).catch(console.error);
     fetchAzureMetrics().then(setAzure).catch(console.error);
+    fetchTrafficHistory().then(setTrafficData).catch(console.error);
   }, [env, region]);
+
+  const getFriendlyOS = (os) => {
+    if (!os) return '...';
+    if (os.toLowerCase() === 'darwin') return 'macOS';
+    if (os.toLowerCase() === 'linux') return 'Linux';
+    return os;
+  };
 
   return (
     <div className="flex flex-col gap-6 p-6 overflow-y-auto h-full w-full">
@@ -28,12 +35,11 @@ export default function OverviewPage() {
         <p className="text-sm text-gray-400 mt-1">Global summary of your cloud infrastructure and services.</p>
       </div>
 
-      {/* Top 4 Metrics */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: 'CPU Usage', value: metrics ? `${metrics.cpu.usage.toFixed(1)}%` : '...', sub: `${metrics ? metrics.cpu.cores : '...'} cores`, icon: Box, color: 'text-blue-500' },
           { label: 'Memory Used', value: metrics ? `${(metrics.memory.used / (1024*1024*1024)).toFixed(1)} GB` : '...', sub: `${metrics ? (metrics.memory.usage_percent).toFixed(1) : '...'}%`, icon: Layers, color: 'text-purple-500' },
-          { label: 'OS', value: metrics ? metrics.host.platform : '...', sub: metrics ? metrics.host.os : '...', icon: Server, color: 'text-green-500' },
+          { label: 'OS', value: metrics ? getFriendlyOS(metrics.host.os) : '...', sub: metrics ? metrics.host.platform : '...', icon: Server, color: 'text-green-500' },
           { label: 'Uptime', value: metrics ? `${(metrics.host.uptime / 3600).toFixed(1)} hrs` : '...', sub: 'System Uptime', icon: Shield, color: 'text-yellow-500' },
         ].map((m) => (
           <div key={m.label} className="bg-surface border border-border rounded-xl p-4 flex flex-col justify-between">
@@ -43,8 +49,8 @@ export default function OverviewPage() {
         ))}
       </div>
 
-      {/* Cloud Providers Cards */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* AWS */}
         <div className="bg-surface border border-border rounded-xl p-5 flex flex-col justify-between relative overflow-hidden">
           <div className="absolute top-0 right-0 w-24 h-24 bg-orange-500/10 rounded-bl-full -mr-4 -mt-4"></div>
           <div className="flex items-center gap-3 mb-4 z-10">
@@ -52,11 +58,12 @@ export default function OverviewPage() {
             <div><h3 className="text-white font-medium">AWS Cloud</h3><p className="text-xs text-gray-500">Amazon Web Services</p></div>
           </div>
           <div className="flex items-end justify-between z-10">
-            <div><div className="text-3xl font-bold text-white">{aws ? aws.s3_buckets : '...'}</div><div className="text-xs text-gray-400 mt-1">Connected Providers</div></div>
-            <span className={`text-[10px] px-2 py-0.5 rounded border ${aws?.status?.includes('connected') ? 'text-green-500 border-green-500/20 bg-green-500/5' : 'text-yellow-500 border-yellow-500/20 bg-yellow-500/5'}`}>{aws ? aws.status : '...'}</span>
+            <div><div className="text-3xl font-bold text-white">{aws?.connected ? '1' : '0'}</div><div className="text-xs text-gray-400 mt-1">Connected</div></div>
+            <span className={`text-[10px] px-2 py-0.5 rounded border ${aws?.connected ? 'text-green-500 border-green-500/20 bg-green-500/5' : 'text-yellow-500 border-yellow-500/20 bg-yellow-500/5'}`}>{aws?.status || 'Checking...'}</span>
           </div>
         </div>
 
+        {/* GCP */}
         <div className="bg-surface border border-border rounded-xl p-5 flex flex-col justify-between relative overflow-hidden">
           <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 rounded-bl-full -mr-4 -mt-4"></div>
           <div className="flex items-center gap-3 mb-4 z-10">
@@ -64,11 +71,12 @@ export default function OverviewPage() {
             <div><h3 className="text-white font-medium">Google Cloud</h3><p className="text-xs text-gray-500">GCP Platform</p></div>
           </div>
           <div className="flex items-end justify-between z-10">
-            <div><div className="text-3xl font-bold text-white">{gcp ? gcp.projects : '...'}</div><div className="text-xs text-gray-400 mt-1">Projects</div></div>
-            <span className={`text-[10px] px-2 py-0.5 rounded border ${gcp?.status?.includes('connected') ? 'text-green-500 border-green-500/20 bg-green-500/5' : 'text-yellow-500 border-yellow-500/20 bg-yellow-500/5'}`}>{gcp ? gcp.status : '...'}</span>
+            <div><div className="text-3xl font-bold text-white">{gcp?.connected ? '1' : '0'}</div><div className="text-xs text-gray-400 mt-1">Projects</div></div>
+            <span className={`text-[10px] px-2 py-0.5 rounded border ${gcp?.connected ? 'text-green-500 border-green-500/20 bg-green-500/5' : 'text-yellow-500 border-yellow-500/20 bg-yellow-500/5'}`}>{gcp?.status || 'Disconnected'}</span>
           </div>
         </div>
 
+        {/* Azure */}
         <div className="bg-surface border border-border rounded-xl p-5 flex flex-col justify-between relative overflow-hidden">
           <div className="absolute top-0 right-0 w-24 h-24 bg-cyan-500/10 rounded-bl-full -mr-4 -mt-4"></div>
           <div className="flex items-center gap-3 mb-4 z-10">
@@ -76,32 +84,49 @@ export default function OverviewPage() {
             <div><h3 className="text-white font-medium">Microsoft Azure</h3><p className="text-xs text-gray-500">Azure Cloud</p></div>
           </div>
           <div className="flex items-end justify-between z-10">
-            <div><div className="text-3xl font-bold text-white">{azure ? azure.virtual_machines : '...'}</div><div className="text-xs text-gray-400 mt-1">Virtual Machines</div></div>
-            <span className={`text-[10px] px-2 py-0.5 rounded border ${azure?.status?.includes('connected') ? 'text-green-500 border-green-500/20 bg-green-500/5' : 'text-yellow-500 border-yellow-500/20 bg-yellow-500/5'}`}>{azure ? azure.status : '...'}</span>
+            <div><div className="text-3xl font-bold text-white">{azure?.connected ? '1' : '0'}</div><div className="text-xs text-gray-400 mt-1">Virtual Machines</div></div>
+            <span className={`text-[10px] px-2 py-0.5 rounded border ${azure?.connected ? 'text-green-500 border-green-500/20 bg-green-500/5' : 'text-yellow-500 border-yellow-500/20 bg-yellow-500/5'}`}>{azure?.status || 'Disconnected'}</span>
           </div>
         </div>
       </div>
 
-      {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 bg-surface border border-border rounded-xl p-4 flex flex-col">
-          <div className="flex justify-between items-center mb-4"><h3 className="text-sm font-medium text-white">Global Traffic Overview</h3><span className="text-xs text-gray-400 border border-border px-2 py-1 rounded">Last 24 hours</span></div>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-sm font-medium text-white">Global Traffic Overview</h3>
+            <span className="text-xs text-gray-400 border border-border px-2 py-1 rounded">Last 24 hours</span>
+          </div>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
-                <defs><linearGradient id="colorReq" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#6366f1" stopOpacity={0.3}/><stop offset="95%" stopColor="#6366f1" stopOpacity={0}/></linearGradient></defs>
-                <XAxis dataKey="time" stroke="#52525b" fontSize={10} tickLine={false} axisLine={false} /><YAxis stroke="#52525b" fontSize={10} tickLine={false} axisLine={false} /><Tooltip contentStyle={{ backgroundColor: '#121216', borderColor: '#27272a', fontSize: '12px' }} />
-                <Area type="monotone" dataKey="req" stroke="#6366f1" strokeWidth={2} fillOpacity={1} fill="url(#colorReq)" />
+              <AreaChart data={trafficData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorRecv" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <XAxis dataKey="time" stroke="#52525b" fontSize={10} tickLine={false} axisLine={false} />
+                <YAxis 
+                  stroke="#52525b" 
+                  fontSize={10} 
+                  tickLine={false} 
+                  axisLine={false} 
+                  tickFormatter={(value) => `${(value / 1000000).toFixed(1)}M`}
+                />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#121216', borderColor: '#27272a', fontSize: '12px' }}
+                  formatter={(value) => [`${(value / 1000000).toFixed(2)} MB`, '']}
+                />
+                <Area type="monotone" dataKey="recv" stroke="#6366f1" strokeWidth={2} fillOpacity={1} fill="url(#colorRecv)" name="Received" />
+                <Area type="monotone" dataKey="sent" stroke="#22c55e" strokeWidth={2} fillOpacity={0} name="Sent" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        {/* System Health with Cloud Statuses */}
         <div className="bg-surface border border-border rounded-xl p-4 flex flex-col">
           <div className="flex justify-between items-center mb-4"><h3 className="text-sm font-medium text-white">System Health</h3><span className="text-xs text-green-500 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-500"></span> Live</span></div>
           <div className="flex-1 flex flex-col justify-center gap-4">
-            {/* Local Mac Stats */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-green-500"></span><span className="text-sm text-gray-300">CPU Cores</span></div>
               <div className="text-right"><div className="text-xs text-white">{metrics ? metrics.cpu.cores : '...'}</div><div className="text-[10px] text-green-500">Healthy</div></div>
@@ -112,23 +137,28 @@ export default function OverviewPage() {
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-green-500"></span><span className="text-sm text-gray-300">Platform</span></div>
-              <div className="text-right"><div className="text-xs text-white">{metrics ? metrics.host.platform : '...'}</div><div className="text-[10px] text-green-500">Healthy</div></div>
+              <div className="text-right"><div className="text-xs text-white">{metrics ? getFriendlyOS(metrics.host.os) : '...'}</div><div className="text-[10px] text-green-500">Healthy</div></div>
             </div>
 
-            {/* Cloud Providers Status */}
             <div className="mt-2 pt-2 border-t border-border">
               <div className="text-xs text-gray-500 mb-2">Cloud Providers</div>
               <div className="flex items-center justify-between mb-1">
                 <span className="text-xs text-gray-300">AWS</span>
-                <span className="text-[10px] text-green-500 flex items-center gap-1"><span className="w-1 h-1 bg-green-500 rounded-full"></span>{aws ? aws.status : '...'}</span>
+                <span className={`text-[10px] flex items-center gap-1 ${aws?.connected ? 'text-green-500' : 'text-yellow-500'}`}>
+                  <span className={`w-1 h-1 rounded-full ${aws?.connected ? 'bg-green-500' : 'bg-yellow-500'}`}></span>{aws?.status || '...'}
+                </span>
               </div>
               <div className="flex items-center justify-between mb-1">
                 <span className="text-xs text-gray-300">GCP</span>
-                <span className="text-[10px] text-green-500 flex items-center gap-1"><span className="w-1 h-1 bg-green-500 rounded-full"></span>{gcp ? gcp.status : '...'}</span>
+                <span className={`text-[10px] flex items-center gap-1 ${gcp?.connected ? 'text-green-500' : 'text-yellow-500'}`}>
+                  <span className={`w-1 h-1 rounded-full ${gcp?.connected ? 'bg-green-500' : 'bg-yellow-500'}`}></span>{gcp?.status || '...'}
+                </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-xs text-gray-300">Azure</span>
-                <span className="text-[10px] text-green-500 flex items-center gap-1"><span className="w-1 h-1 bg-green-500 rounded-full"></span>{azure ? azure.status : '...'}</span>
+                <span className={`text-[10px] flex items-center gap-1 ${azure?.connected ? 'text-green-500' : 'text-yellow-500'}`}>
+                  <span className={`w-1 h-1 rounded-full ${azure?.connected ? 'bg-green-500' : 'bg-yellow-500'}`}></span>{azure?.status || '...'}
+                </span>
               </div>
             </div>
           </div>
