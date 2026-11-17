@@ -9,6 +9,7 @@ export default function OverviewPage() {
   const [gcp, setGcp] = useState(null);
   const [azure, setAzure] = useState(null);
   const [trafficData, setTrafficData] = useState([]);
+  const [deployments, setDeployments] = useState([]);
   
   const env = localStorage.getItem('nexus_env')?.toLowerCase() || 'production';
   const region = localStorage.getItem('nexus_region')?.split(' ')[0] || 'us-east-1';
@@ -19,6 +20,24 @@ export default function OverviewPage() {
     fetchGCPMetrics().then(setGcp).catch(console.error);
     fetchAzureMetrics().then(setAzure).catch(console.error);
     fetchTrafficHistory().then(setTrafficData).catch(console.error);
+    
+    // Direct GitHub API call
+    fetch('https://api.github.com/repos/alwaysarya/NEXUS/commits?per_page=3')
+      .then(res => res.json())
+      .then(data => {
+        if(Array.isArray(data)) {
+          const formatted = data.map(c => ({
+            id: c.sha.substring(0, 7),
+            message: c.commit.message,
+            author: c.commit.author.name,
+            time: new Date(c.commit.author.date).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }),
+            status: 'Succeeded',
+            env: 'Production'
+          }));
+          setDeployments(formatted);
+        }
+      })
+      .catch(console.error);
   }, [env, region]);
 
   const getFriendlyOS = (os) => {
@@ -184,25 +203,21 @@ export default function OverviewPage() {
           <span className="text-xs text-primary cursor-pointer hover:text-primary/80 transition-colors flex items-center gap-1 font-medium">View All <ChevronRight size={14}/></span>
         </div>
         <div className="space-y-3">
-          {[
-            { id: 'a1b2c3d', msg: 'feat: added real dashboard logic', author: 'Aryan', time: '18 Nov 04:37', status: 'Succeeded', env: 'Production' },
-            { id: 'x9y8z7w', msg: 'fix: updated UI components', author: 'Aryan', time: '17 Nov 04:37', status: 'Succeeded', env: 'Production' },
-            { id: 'm4n5o6p', msg: 'chore: initial setup', author: 'Aryan', time: '15 Nov 04:37', status: 'Succeeded', env: 'Staging' },
-          ].map((dep) => (
+          {deployments.length > 0 ? deployments.map((dep) => (
             <div key={dep.id} className="flex flex-col md:flex-row md:items-center justify-between p-4 bg-background border border-border rounded-xl gap-3 hover:border-gray-600 transition-colors">
               <div className="flex items-center gap-4">
                 <div className="text-sm font-bold text-white bg-surface border border-border px-2.5 py-1 rounded-md">{dep.id}</div>
-                <div className="text-sm text-gray-300 font-medium">{dep.msg}</div>
+                <div className="text-sm text-gray-300 font-medium">{dep.message}</div>
               </div>
               <div className="flex items-center gap-6 text-xs text-gray-400 font-medium">
                 <span className="bg-surface px-2 py-1 rounded-md border border-border">{dep.env}</span>
                 <span>{dep.author}</span><span>{dep.time}</span>
-                <span className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full font-semibold ${dep.status === 'Succeeded' ? 'text-green-500 bg-green-500/10 border border-green-500/20' : 'text-primary bg-primary/10 border border-primary/20'}`}>
-                  {dep.status === 'Succeeded' ? '✓' : <Activity size={12} className="animate-spin" />} {dep.status}
+                <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full font-semibold text-green-500 bg-green-500/10 border border-green-500/20">
+                  ✓ {dep.status}
                 </span>
               </div>
             </div>
-          ))}
+          )) : <div className="text-sm text-gray-500 text-center py-4">Fetching commits from GitHub...</div>}
         </div>
       </div>
     </div>
