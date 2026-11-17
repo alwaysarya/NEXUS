@@ -1,0 +1,121 @@
+package system
+
+import (
+	"context"
+	"fmt"
+	"github.com/shirou/gopsutil/v4/cpu"
+	"github.com/shirou/gopsutil/v4/disk"
+	"github.com/shirou/gopsutil/v4/mem"
+	"github.com/shirou/gopsutil/v4/net"
+	"os"
+	"os/exec"
+	"runtime"
+	"strconv"
+	"strings"
+	"time"
+)
+
+type Info struct {
+	Hostname string
+	CPUCores int
+	MemoryMB int64
+}
+
+func Collect() (Info, error) {
+	hostname, err := os.Hostname()
+	if err != nil {
+		return Info{}, fmt.Errorf("detect hostname: %w", err)
+	}
+
+	memoryMB, err := totalMemoryMB()
+	if err != nil {
+		return Info{}, err
+	}
+
+	return Info{
+		Hostname: hostname,
+		CPUCores: runtime.NumCPU(),
+		MemoryMB: memoryMB,
+	}, nil
+}
+
+func totalMemoryMB() (int64, error) {
+	var command *exec.Cmd
+
+	switch runtime.GOOS {
+	case "darwin":
+		command = exec.Command("sysctl", "-n", "hw.memsize")
+	case "linux":
+		command = exec.Command("sh", "-c", "awk '/MemTotal/ {print $2 * 1024}' /proc/meminfo")
+	default:
+		return 0, fmt.Errorf("unsupported operating system: %s", runtime.GOOS)
+	}
+
+	output, err := command.Output()
+	if err != nil {
+		return 0, fmt.Errorf("detect system memory: %w", err)
+	}
+
+	bytes, err := strconv.ParseInt(strings.TrimSpace(string(output)), 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("parse system memory: %w", err)
+	}
+
+	if bytes <= 0 {
+		return 0, fmt.Errorf("detected invalid system memory: %d bytes", bytes)
+	}
+
+	return bytes / (1024 * 1024), nil
+}
+
+// Metrics contains measurements collected from the actual host.
+type Metrics struct {
+	CPUPercent       float64   `json:"cpu_percent"`
+	MemoryTotalBytes uint64    `json:"memory_total_bytes"`
+	MemoryUsedBytes  uint64    `json:"memory_used_bytes"`
+	DiskTotalBytes   uint64    `json:"disk_total_bytes"`
+	DiskUsedBytes    uint64    `json:"disk_used_bytes"`
+	NetworkSentBytes uint64    `json:"network_sent_bytes"`
+	NetworkRecvBytes uint64    `json:"network_recv_bytes"`
+	CollectedAt      time.Time `json:"collected_at"`
+}
+
+// CollectMetrics samples real host CPU, memory, disk and network counters.
+func CollectMetrics(ctx context.Context) (Metrics, error) {
+	cpuValues, err := cpu.PercentWithContext(ctx, time.Second, false)
+	if err != nil {
+		return Metrics{}, fmt.Errorf("collect CPU metrics: %w", err)
+	}
+	if len(cpuValues) == 0 {
+		return Metrics{}, fmt.Errorf("collect CPU metrics: no CPU measurements returned")
+	}
+
+	memory, err := mem.VirtualMemoryWithContext(ctx)
+	if err != nil {
+		return Metrics{}, fmt.Errorf("collect memory metrics: %w", err)
+	}
+
+	disk, err := disk.UsageWithContext(ctx, "/")
+	if err != nil {
+		return Metrics{}, fmt.Errorf("collect disk metrics: %w", err)
+	}
+
+	network, err := net.IOCountersWithContext(ctx, false)
+	if err != nil {
+		return Metrics{}, fmt.Errorf("collect network metrics: %w", err)
+	}
+	if len(network) == 0 {
+		return Metrics{}, fmt.Errorf("collect network metrics: no network measurements returned")
+	}
+
+	return Metrics{
+		CPUPercent:       cpuValues[0],
+		MemoryTotalBytes: memory.Total,
+		MemoryUsedBytes:  memory.Used,
+		DiskTotalBytes:   disk.Total,
+		DiskUsedBytes:    disk.Used,
+		NetworkSentBytes: network[0].BytesSent,
+		NetworkRecvBytes: network[0].BytesRecv,
+		CollectedAt:      time.Now().UTC(),
+	}, nil
+}

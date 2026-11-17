@@ -1,0 +1,247 @@
+package api
+
+import (
+	"encoding/json"
+	"math"
+	"net/http"
+	"time"
+
+	"github.com/alwaysarya/nexus/services/control-plane/internal/database"
+)
+
+type NodeRegistration struct {
+	ID       string `json:"id"`
+	Hostname string `json:"hostname"`
+	CPUCores int    `json:"cpu_cores"`
+	MemoryMB int64  `json:"memory_mb"`
+}
+
+type NodeMetricsPayload struct {
+	CPUPercent        float64   `json:"cpu_percent"`
+	MemoryTotalBytes  uint64    `json:"memory_total_bytes"`
+	MemoryUsedBytes   uint64    `json:"memory_used_bytes"`
+	DiskTotalBytes    uint64    `json:"disk_total_bytes"`
+	DiskUsedBytes     uint64    `json:"disk_used_bytes"`
+	NetworkSentBytes  uint64    `json:"network_sent_bytes"`
+	NetworkRecvBytes  uint64    `json:"network_recv_bytes"`
+	OSName            string    `json:"os_name"`
+	OSPlatform        string    `json:"os_platform"`
+	OSPlatformVersion string    `json:"os_platform_version"`
+	UptimeSeconds     uint64    `json:"uptime_seconds"`
+	CollectedAt       time.Time `json:"collected_at"`
+}
+
+func writeJSON(w http.ResponseWriter, status int, data any) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	_ = json.NewEncoder(w).Encode(data)
+}
+
+func RegisterNodeHandler(w http.ResponseWriter, r *http.Request) {
+	var req NodeRegistration
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	agentNodeID, ok := AgentNodeIDFromContext(r.Context())
+	if !ok || agentNodeID != req.ID {
+		http.Error(w, "Agent token does not authorize this node", http.StatusForbidden)
+		return
+	}
+
+	if req.ID == "" || req.Hostname == "" ||
+		req.CPUCores < 1 || req.CPUCores > 4096 ||
+		req.MemoryMB < 1 {
+		http.Error(w, "Invalid node registration data", http.StatusBadRequest)
+		return
+	}
+
+	_, err := database.DB.Exec(r.Context(), `
+		INSERT INTO nodes (id, hostname, cpu_cores, memory_mb, status, last_heartbeat)
+		VALUES ($1, $2, $3, $4, 'online', NOW())
+		ON CONFLICT (id) DO UPDATE SET
+			hostname = EXCLUDED.hostname,
+			cpu_cores = EXCLUDED.cpu_cores,
+			memory_mb = EXCLUDED.memory_mb,
+			status = 'online',
+			last_heartbeat = NOW()
+	`, req.ID, req.Hostname, req.CPUCores, req.MemoryMB)
+
+	if err != nil {
+		http.Error(w, "Node registration failed", http.StatusInternalServerError)
+		return
+	}
+
+	writeJSON(w, http.StatusCreated, map[string]string{
+		"id":     req.ID,
+		"status": "online",
+	})
+}
+
+func NodeHeartbeatHandler(w http.ResponseWriter, r *http.Request) {
+	nodeID := r.PathValue("id")
+	agentNodeID, ok := AgentNodeIDFromContext(r.Context())
+
+	if !ok || nodeID == "" || agentNodeID != nodeID {
+		http.Error(w, "Agent token does not authorize this node", http.StatusForbidden)
+		return
+	}
+
+	tag, err := database.DB.Exec(r.Context(), `
+		UPDATE nodes
+		SET status = 'online', last_heartbeat = NOW()
+		WHERE id = $1
+	`, nodeID)
+
+	if err != nil {
+		http.Error(w, "Heartbeat update failed", http.StatusInternalServerError)
+		return
+	}
+	if tag.RowsAffected() == 0 {
+		http.Error(w, "Node not found", http.StatusNotFound)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]string{"status": "online"})
+}
+
+func IngestNodeMetricsHandler(w http.ResponseWriter, r *http.Request) {
+	nodeID := r.PathValue("id")
+	agentNodeID, ok := AgentNodeIDFromContext(r.Context())
+
+	if !ok || nodeID == "" || agentNodeID != nodeID {
+		http.Error(w, "Agent token does not authorize this node", http.StatusForbidden)
+		return
+	}
+
+	var m NodeMetricsPayload
+	if err := json.NewDecoder(r.Body).Decode(&m); err != nil {
+		http.Error(w, "Invalid metrics JSON", http.StatusBadRequest)
+		return
+	}
+
+	maxInt64 := uint64(math.MaxInt64)
+	if math.IsNaN(m.CPUPercent) || math.IsInf(m.CPUPercent, 0) ||
+		m.CPUPercent < 0 || m.CPUPercent > 100 ||
+		m.MemoryUsedBytes > m.MemoryTotalBytes ||
+		m.DiskUsedBytes > m.DiskTotalBytes ||
+		m.MemoryTotalBytes > maxInt64 ||
+		m.MemoryUsedBytes > maxInt64 ||
+		m.DiskTotalBytes > maxInt64 ||
+		m.DiskUsedBytes > maxInt64 ||
+		m.NetworkSentBytes > maxInt64 ||
+		m.NetworkRecvBytes > maxInt64 ||
+		m.UptimeSeconds > maxInt64 {
+		http.Error(w, "Metrics values are outside valid ranges", http.StatusBadRequest)
+		return
+	}
+
+	if m.CollectedAt.IsZero() {
+		m.CollectedAt = time.Now().UTC()
+	}
+
+	tag, err := database.DB.Exec(r.Context(), `
+		INSERT INTO node_metrics (
+			node_id, cpu_percent,
+			memory_total_bytes, memory_used_bytes,
+			disk_total_bytes, disk_used_bytes,
+			network_sent_bytes, network_recv_bytes,
+					os_name, os_platform, os_platform_version,
+					uptime_seconds, collected_at
+		)
+		SELECT $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13
+		WHERE EXISTS (SELECT 1 FROM nodes WHERE id = $1)
+	`,
+		nodeID, m.CPUPercent,
+		int64(m.MemoryTotalBytes), int64(m.MemoryUsedBytes),
+		int64(m.DiskTotalBytes), int64(m.DiskUsedBytes),
+		int64(m.NetworkSentBytes), int64(m.NetworkRecvBytes),
+		m.OSName, m.OSPlatform, m.OSPlatformVersion,
+		int64(m.UptimeSeconds), m.CollectedAt,
+	)
+
+	if err != nil {
+		http.Error(w, "Metrics persistence failed", http.StatusInternalServerError)
+		return
+	}
+	if tag.RowsAffected() == 0 {
+		http.Error(w, "Node not found; register it first", http.StatusNotFound)
+		return
+	}
+
+	writeJSON(w, http.StatusCreated, map[string]string{"status": "stored"})
+}
+
+func ListNodesHandler(w http.ResponseWriter, r *http.Request) {
+	rows, err := database.DB.Query(r.Context(), `
+		SELECT id, hostname, cpu_cores, memory_mb, status,
+		       registered_at, last_heartbeat
+		FROM nodes ORDER BY registered_at DESC
+	`)
+	if err != nil {
+		http.Error(w, "Could not retrieve nodes", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	nodes := make([]map[string]any, 0)
+	for rows.Next() {
+		var id, hostname, status string
+		var cores int
+		var memory int64
+		var registered time.Time
+		var heartbeat *time.Time
+
+		if err := rows.Scan(&id, &hostname, &cores, &memory, &status, &registered, &heartbeat); err != nil {
+			http.Error(w, "Could not read node data", http.StatusInternalServerError)
+			return
+		}
+
+		nodes = append(nodes, map[string]any{
+			"id": id, "hostname": hostname,
+			"cpu_cores": cores, "memory_mb": memory,
+			"status": status, "registered_at": registered,
+			"last_heartbeat": heartbeat,
+		})
+	}
+
+	if err := rows.Err(); err != nil {
+		http.Error(w, "Node query failed", http.StatusInternalServerError)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, nodes)
+}
+
+func LatestNodeMetricsHandler(w http.ResponseWriter, r *http.Request) {
+	nodeID := r.PathValue("id")
+
+	var m NodeMetricsPayload
+	err := database.DB.QueryRow(r.Context(), `
+		SELECT cpu_percent,
+		       memory_total_bytes, memory_used_bytes,
+		       disk_total_bytes, disk_used_bytes,
+		       network_sent_bytes, network_recv_bytes,
+				       os_name, os_platform, os_platform_version,
+				       uptime_seconds, collected_at
+				FROM node_metrics
+		WHERE node_id = $1
+		ORDER BY collected_at DESC
+		LIMIT 1
+	`, nodeID).Scan(
+		&m.CPUPercent,
+		&m.MemoryTotalBytes, &m.MemoryUsedBytes,
+		&m.DiskTotalBytes, &m.DiskUsedBytes,
+		&m.NetworkSentBytes, &m.NetworkRecvBytes,
+		&m.OSName, &m.OSPlatform, &m.OSPlatformVersion,
+		&m.UptimeSeconds, &m.CollectedAt,
+	)
+
+	if err != nil {
+		http.Error(w, "No metrics available for this node", http.StatusNotFound)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, m)
+}
