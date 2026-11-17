@@ -24,7 +24,6 @@ func main() {
 
 	mux := http.NewServeMux()
 	
-	// Existing / Core Routes
 	mux.Handle("/metrics", promhttp.Handler())
 	mux.HandleFunc("/api/real-metrics", api.RealMetricsHandler)
 	mux.HandleFunc("/api/aws-metrics", api.AWSHandler)
@@ -35,7 +34,10 @@ func main() {
 	mux.HandleFunc("/api/network-metrics", api.NetworkMetricsHandler)
 	mux.HandleFunc("/api/storage-metrics", api.StorageMetricsHandler)
 	
-	// Temporary dummy routes for other pages to avoid blank screens
+	// Clusters Route
+	mux.HandleFunc("/api/clusters", api.ClustersHandler)
+
+	// Dummy routes for other pages
 	mux.HandleFunc("/api/nodes", func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("[]")) })
 	mux.HandleFunc("/api/workloads", func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("[]")) })
 	mux.HandleFunc("/api/networking", func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("[]")) })

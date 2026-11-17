@@ -40,6 +40,14 @@ export default function OverviewPage() {
       .catch(console.error);
   }, [env, region]);
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchRealMetrics(env, region).then(setMetrics).catch(console.error);
+      fetchAWSMetrics().then(setAws).catch(console.error);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [env, region]);
+
   const getFriendlyOS = (os) => {
     if (!os) return '...';
     if (os.toLowerCase() === 'darwin') return 'macOS';
