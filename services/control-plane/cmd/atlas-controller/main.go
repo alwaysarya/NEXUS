@@ -31,7 +31,7 @@ func main() {
 	mux.HandleFunc("/api/azure-metrics", api.AzureHandler)
 	mux.HandleFunc("/api/traffic-metrics", api.TrafficHistoryHandler)
 	mux.HandleFunc("/api/security-metrics", api.SecurityMetricsHandler)
-	mux.HandleFunc("/api/network-metrics", api.NetworkMetricsHandler)
+	mux.HandleFunc("/api/network-metrics", api.NetworkingHandler)
 	mux.HandleFunc("/api/storage-metrics", api.StorageMetricsHandler)
 	
 	// Clusters Route

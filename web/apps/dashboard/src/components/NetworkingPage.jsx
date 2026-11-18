@@ -1,116 +1,129 @@
 import { useState, useEffect } from 'react';
-import { Network, Globe, Shield, Server, Activity } from 'lucide-react';
-import { fetchNetworking, fetchNetworkMetrics } from '../services/api';
+import { Network, Activity, Globe, Server, ArrowUpRight, ArrowDownLeft, Wifi } from 'lucide-react';
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function NetworkingPage() {
-  const [data, setData] = useState([]);
-  const [netMetrics, setNetMetrics] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [network, setNetwork] = useState(null);
+  const [graphData, setGraphData] = useState([]);
 
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [networkingData, metrics] = await Promise.all([fetchNetworking(), fetchNetworkMetrics()]);
-        setData(networkingData);
-        setNetMetrics(metrics);
-      } catch (error) {
-        console.error("Failed to fetch networking data", error);
-      } finally {
-        setLoading(false);
-      }
+    const fetchData = () => {
+      fetch('http://127.0.0.1:8080/api/network-metrics')
+        .then(res => res.json())
+        .then(data => {
+          setNetwork(data);
+          // Add data to graph
+          setGraphData(prev => {
+            const newData = [...prev, {
+              time: new Date().toLocaleTimeString().split(' ')[0],
+              sent: data.bytes_sent,
+              recv: data.bytes_recv
+            }];
+            return newData.slice(-20); // keep last 20 points
+          });
+        })
+        .catch(console.error);
     };
-    loadData();
+
+    fetchData();
+    const interval = setInterval(fetchData, 3000); // Update every 3 sec
+    return () => clearInterval(interval);
   }, []);
 
-  // Real data formatting
   const formatBytes = (bytes) => {
     if (!bytes) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+    const k = 1024, sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
   return (
-    <div className="flex flex-col gap-6 p-6 overflow-y-auto h-full w-full">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-3"><Network className="text-primary" size={24} /> Networking</h1>
-          <p className="text-sm text-gray-400 mt-1">Manage ingress, egress, load balancers, and network policies.</p>
-        </div>
+    <div className="flex flex-col gap-6 p-6 h-full w-full bg-background text-white overflow-y-auto">
+      <div>
+        <h1 className="text-2xl font-bold flex items-center gap-2"><Network size={24} className="text-primary"/> Networking</h1>
+        <p className="text-sm text-gray-400 mt-1">Manage ingress, egress, load balancers, and network policies.</p>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
-        {/* Card 1: Real Ingress Data (Mac's active network) */}
-        <div className="bg-surface border border-border rounded-xl p-4 flex flex-col">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Network Interfaces */}
+        <div className="bg-surface border border-border rounded-xl p-5">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-sm font-medium text-white">Network Interfaces</h3>
-            <span className="text-xs text-gray-500">Active</span>
+            <h3 className="text-sm font-medium text-white flex items-center gap-2"><Wifi size={16}/> Network Interfaces</h3>
+            <span className="text-xs text-green-500">Active</span>
           </div>
           <div className="space-y-3">
-            {loading ? <div className="text-gray-500 text-sm">Loading...</div> : (
-              <div className="bg-background border border-border rounded p-2 flex items-center justify-between">
+            {network?.interfaces?.length > 0 ? network.interfaces.map((iface, i) => (
+              <div key={i} className="bg-background border border-border rounded-lg p-3 flex justify-between items-center">
                 <div>
-                  <div className="text-xs text-white flex items-center gap-2"><Globe size={12} className="text-primary"/> Local Interface</div>
-                  <div className="text-[10px] text-gray-500 mt-1">Type: Ethernet | Target: Localhost</div>
+                  <div className="text-sm text-white font-medium">{iface.name}</div>
+                  <div className="text-[10px] text-gray-500">{iface.type} • {iface.addrs}</div>
                 </div>
-                <span className="text-[10px] text-green-500 bg-green-500/10 px-1.5 py-0.5 rounded border border-green-500/20">Active</span>
+                <span className="text-xs bg-green-500/10 text-green-500 border border-green-500/20 px-2 py-0.5 rounded">Active</span>
               </div>
+            )) : (
+              <div className="text-sm text-gray-500">No active interfaces found.</div>
             )}
           </div>
         </div>
 
-        {/* Card 2: Real Load Balancer Data (Simulated as Mac Network I/O) */}
-        <div className="bg-surface border border-border rounded-xl p-4 flex flex-col">
+        {/* Network Traffic */}
+        <div className="bg-surface border border-border rounded-xl p-5">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-sm font-medium text-white">Network Traffic</h3>
-            <span className="text-xs text-gray-500">Live</span>
+            <h3 className="text-sm font-medium text-white flex items-center gap-2"><Activity size={16}/> Network Traffic</h3>
+            <span className="text-xs text-green-500 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span> Live</span>
           </div>
           <div className="space-y-3">
-            {loading ? <div className="text-gray-500 text-sm">Loading...</div> : (
-              <>
-                <div className="bg-background border border-border rounded p-2 flex items-center justify-between">
-                  <div>
-                    <div className="text-xs text-white flex items-center gap-2"><Server size={12} className="text-blue-500"/> Data Sent</div>
-                    <div className="text-[10px] text-gray-500 mt-1">{netMetrics ? formatBytes(netMetrics.bytes_sent) : '0 B'}</div>
-                  </div>
-                </div>
-                <div className="bg-background border border-border rounded p-2 flex items-center justify-between">
-                  <div>
-                    <div className="text-xs text-white flex items-center gap-2"><Server size={12} className="text-green-500"/> Data Received</div>
-                    <div className="text-[10px] text-gray-500 mt-1">{netMetrics ? formatBytes(netMetrics.bytes_recv) : '0 B'}</div>
-                  </div>
-                </div>
-              </>
-            )}
+            <div className="bg-background border border-border rounded-lg p-3 flex justify-between items-center">
+              <div className="flex items-center gap-2 text-sm text-gray-400"><ArrowUpRight size={14} className="text-blue-500"/> Data Sent</div>
+              <span className="text-sm font-bold text-white">{formatBytes(network?.bytes_sent)}</span>
+            </div>
+            <div className="bg-background border border-border rounded-lg p-3 flex justify-between items-center">
+              <div className="flex items-center gap-2 text-sm text-gray-400"><ArrowDownLeft size={14} className="text-purple-500"/> Data Received</div>
+              <span className="text-sm font-bold text-white">{formatBytes(network?.bytes_recv)}</span>
+            </div>
           </div>
         </div>
 
-        {/* Card 3: Real Network Policies (Active Connections) */}
-        <div className="bg-surface border border-border rounded-xl p-4 flex flex-col">
+        {/* Active Connections */}
+        <div className="bg-surface border border-border rounded-xl p-5">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-sm font-medium text-white">Active Connections</h3>
-            <span className="text-xs text-gray-500">Live</span>
+            <h3 className="text-sm font-medium text-white flex items-center gap-2"><Globe size={16}/> Active Connections</h3>
+            <span className="text-xs text-green-500 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span> Live</span>
           </div>
-          <div className="space-y-3">
-            {loading ? <div className="text-gray-500 text-sm">Loading...</div> : (
-              <div className="bg-background border border-border rounded p-2 flex items-center justify-between">
-                <div>
-                  <div className="text-xs text-white flex items-center gap-2"><Shield size={12} className="text-orange-500"/> Total Connections</div>
-                  <div className="text-[10px] text-gray-500 mt-1">Port: Any</div>
-                </div>
-                <span className="text-[10px] text-gray-300 border border-border px-1.5 py-0.5 rounded">{netMetrics ? netMetrics.active_connections : '0'}</span>
-              </div>
-            )}
+          <div className="bg-background border border-border rounded-lg p-4 flex justify-between items-center">
+            <div className="flex items-center gap-2 text-sm text-gray-400"><Server size={14}/> Total Connections</div>
+            <span className="text-2xl font-bold text-white">{network?.active_connections || 0}</span>
           </div>
         </div>
       </div>
 
-      <div className="bg-surface border border-border rounded-xl p-4">
-         <h3 className="text-sm font-medium text-white mb-4">Service Mesh Traffic</h3>
-         <div className="h-64 bg-background border border-border rounded flex items-center justify-center text-gray-500 text-sm">
-            [Service Mesh Traffic Graph Placeholder]
-         </div>
+      {/* Real-Time Traffic Graph */}
+      <div className="bg-surface border border-border rounded-xl p-5 flex-1 min-h-[350px] flex flex-col">
+        <h3 className="text-sm font-medium text-white mb-4">Service Mesh Traffic (Live)</h3>
+        <div className="flex-1 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={graphData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+              <defs>
+                <linearGradient id="colorRecv" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                </linearGradient>
+                <linearGradient id="colorSent" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <XAxis dataKey="time" stroke="#52525b" fontSize={11} tickLine={false} axisLine={false} />
+              <YAxis stroke="#52525b" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(value) => formatBytes(value)} width={80}/>
+              <Tooltip 
+                contentStyle={{ backgroundColor: '#121216', borderColor: '#27272a', borderRadius: '8px', fontSize: '12px' }}
+                formatter={(value) => [formatBytes(value), '']}
+              />
+              <Area type="monotone" dataKey="recv" stroke="#8b5cf6" strokeWidth={2} fillOpacity={1} fill="url(#colorRecv)" name="Received" />
+              <Area type="monotone" dataKey="sent" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#colorSent)" name="Sent" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
       </div>
     </div>
   );
