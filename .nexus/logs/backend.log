@@ -1,0 +1,4 @@
+2026/11/18 06:48:22 ✅ Connected to PostgreSQL
+🚀 Control Plane running on :8080
+2026/11/18 06:48:22 listen tcp :8080: bind: address already in use
+exit status 1
