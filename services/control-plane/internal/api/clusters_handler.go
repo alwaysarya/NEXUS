@@ -3,45 +3,39 @@ package api
 import (
 	"encoding/json"
 	"net/http"
-	"github.com/alwaysarya/nexus/services/control-plane/internal/database"
+	"os/exec"
 )
 
 func ClustersHandler(w http.ResponseWriter, r *http.Request) {
-	// Fetching real nodes from database (registered via agent)
-	rows, err := database.DB.Query(r.Context(), `SELECT id, hostname, cpu_cores, memory_mb, status FROM nodes`)
-	var nodes []map[string]interface{}
+	// Real kubectl command to get real pods
+	out, err := exec.Command("kubectl", "get", "pods", "--no-headers").Output()
+	podsCount := 0
 	if err == nil {
-		defer rows.Close()
-		for rows.Next() {
-			var id, hostname, status string
-			var cores int
-			var mem int64
-			if err := rows.Scan(&id, &hostname, &cores, &mem, &status); err == nil {
-				nodes = append(nodes, map[string]interface{}{
-					"id": id, "hostname": hostname, "cores": cores, "memory": mem, "status": status,
-				})
-			}
+		// Count lines (each line is a pod)
+		for _, b := range out {
+			if b == '\n' { podsCount++ }
 		}
 	}
-	
-	// Fallback real data based on AWS connection
-	if len(nodes) == 0 {
-		nodes = append(nodes, map[string]interface{}{
-			"id": "local-mac-node", "hostname": "Aryans-MacBook-Pro", "cores": 1, "memory": 16384, "status": "Ready",
-		})
+
+	deployments, _ := exec.Command("kubectl", "get", "deployments", "--no-headers").Output()
+	workloadsCount := 0
+	for _, b := range deployments {
+		if b == '\n' { workloadsCount++ }
 	}
 
 	clusterData := map[string]interface{}{
-		"name": "prod-eks-01",
+		"name": "nexus-cluster",
 		"status": "Healthy",
-		"version": "v1.30.4",
-		"region": "ap-south-1",
-		"nodes_count": len(nodes),
-		"pods_count": 148,
-		"workloads_count": 36,
+		"version": "v1.37.0",
+		"region": "local-docker",
+		"nodes_count": 1,
+		"pods_count": podsCount,
+		"workloads_count": workloadsCount,
 		"cpu_usage": 40.6,
 		"memory_usage": 64.0,
-		"nodes": nodes,
+		"nodes": []map[string]interface{}{
+			{"id": "nexus-control-plane", "hostname": "nexus-control-plane", "cores": 10, "memory": 16384, "status": "Ready"},
+		},
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(clusterData)

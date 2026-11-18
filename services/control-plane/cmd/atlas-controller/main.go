@@ -36,10 +36,10 @@ func main() {
 	
 	// Clusters Route
 	mux.HandleFunc("/api/clusters", api.ClustersHandler)
+	mux.HandleFunc("/api/workloads", api.WorkloadsHandler)
 
 	// Dummy routes for other pages
 	mux.HandleFunc("/api/nodes", func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("[]")) })
-	mux.HandleFunc("/api/workloads", func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("[]")) })
 	mux.HandleFunc("/api/networking", func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("[]")) })
 	mux.HandleFunc("/api/storage", func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("[]")) })
 	mux.HandleFunc("/api/cost", func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("{}")) })
