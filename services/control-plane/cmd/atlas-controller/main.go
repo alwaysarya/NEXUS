@@ -32,6 +32,7 @@ func main() {
 	mux.HandleFunc("/api/traffic-metrics", api.TrafficHistoryHandler)
 	mux.HandleFunc("/api/security-metrics", api.SecurityMetricsHandler)
 	mux.HandleFunc("/api/network-metrics", api.NetworkingHandler)
+	mux.HandleFunc("/api/storage-metrics", api.StoragePageHandler)
 	mux.HandleFunc("/api/storage-metrics", api.StorageMetricsHandler)
 	
 	// Clusters Route

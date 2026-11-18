@@ -67,3 +67,5 @@ nginx-app-6495d87fb7-qsd8d    0/1     Completed           0              5s
 api-service-d9dfc5bb5-rcld2   1/1     Running             4 (86s ago)    23m
 nginx-app-7764b65576-4svrp    1/1     Running             0              73s
 nginx-app-7764b65576-pnf9p    1/1     Running             0              89s
+nginx-app-7764b65576-h5pmw    1/1     Running             0              2m7s
+nginx-app-7764b65576-h5pmw    1/1     Running             0              3m32s
