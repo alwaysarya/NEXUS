@@ -14,7 +14,7 @@ pkill -f "vite" 2>/dev/null
 pkill -f "intelligence/api.py" 2>/dev/null
 
 # Docker containers band karo
-docker compose -f docker-compose.monitoring.yml down > /dev/null 2>&1
+# docker compose -f docker-compose.monitoring.yml down > /dev/null 2>&1
 
 sleep 2
 

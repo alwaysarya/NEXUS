@@ -33,19 +33,21 @@ func main() {
 	mux.HandleFunc("/api/security-metrics", api.SecurityMetricsHandler)
 	mux.HandleFunc("/api/network-metrics", api.NetworkingHandler)
 	mux.HandleFunc("/api/storage-metrics", api.StoragePageHandler)
-	mux.HandleFunc("/api/storage-metrics", api.StorageMetricsHandler)
+	mux.HandleFunc("/api/observability-metrics", api.ObservabilityMetricsHandler)
 	
-	// Clusters Route
 	mux.HandleFunc("/api/clusters", api.ClustersHandler)
 	mux.HandleFunc("/api/workloads", api.WorkloadsHandler)
 	mux.HandleFunc("/api/deployments", api.DeploymentsPageHandler)
 	mux.HandleFunc("/api/deploy-action", api.DeployActionHandler)
 	mux.HandleFunc("/api/create-release", api.CreateReleaseHandler)
 
-	// Dummy routes for other pages
+	// Traces and Alerts Routes (Only registered ONCE)
+	mux.HandleFunc("/api/traces", api.TracesHandler)
+	mux.HandleFunc("/api/alerts", api.AlertsHandler)
+
+	// Dummy routes
 	mux.HandleFunc("/api/nodes", func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("[]")) })
 	mux.HandleFunc("/api/networking", func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("[]")) })
-	mux.HandleFunc("/api/storage", func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("[]")) })
 	mux.HandleFunc("/api/cost", func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("{}")) })
 	mux.HandleFunc("/api/automation", func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("[]")) })
 	mux.HandleFunc("/api/health", func(w http.ResponseWriter, r *http.Request) { w.Write([]byte(`{"status":"ok"}`)) })

@@ -1,71 +1,25 @@
-NAME                          READY   STATUS    RESTARTS       AGE
-api-service-d9dfc5bb5-rcld2   1/1     Running   4 (16s ago)    22m
-nginx-app-8ff4b4fbb-df2g8     1/1     Running   2 (16s ago)    8m46s
-nginx-app-8ff4b4fbb-q8sm8     1/1     Running   2 (16s ago)    8m45s
-nginx-app-8ff4b4fbb-zrncz     1/1     Running   2 (16s ago)    8m45s
-test-pod                      1/1     Running   20 (16s ago)   7d2h
-nginx-app-6495d87fb7-qsd8d    0/1     Pending   0              0s
-nginx-app-6495d87fb7-qsd8d    0/1     Pending   0              0s
-nginx-app-6495d87fb7-qsd8d    0/1     ContainerCreating   0              0s
-nginx-app-6495d87fb7-qsd8d    0/1     ContainerCreating   0              1s
-nginx-app-6495d87fb7-qsd8d    1/1     Running             0              1s
-nginx-app-8ff4b4fbb-df2g8     1/1     Terminating         2 (33s ago)    9m3s
-nginx-app-8ff4b4fbb-df2g8     1/1     Terminating         2 (33s ago)    9m3s
-nginx-app-6495d87fb7-jb7n4    0/1     Pending             0              0s
-nginx-app-6495d87fb7-jb7n4    0/1     Pending             0              0s
-nginx-app-6495d87fb7-jb7n4    0/1     ContainerCreating   0              0s
-nginx-app-8ff4b4fbb-df2g8     0/1     Completed           2 (33s ago)    9m3s
-nginx-app-6495d87fb7-jb7n4    0/1     ContainerCreating   0              0s
-nginx-app-6495d87fb7-jb7n4    1/1     Running             0              0s
-nginx-app-8ff4b4fbb-zrncz     1/1     Terminating         2 (33s ago)    9m2s
-nginx-app-8ff4b4fbb-zrncz     1/1     Terminating         2 (33s ago)    9m2s
-nginx-app-6495d87fb7-ktp7m    0/1     Pending             0              0s
-nginx-app-6495d87fb7-ktp7m    0/1     Pending             0              0s
-nginx-app-6495d87fb7-ktp7m    0/1     ContainerCreating   0              0s
-nginx-app-8ff4b4fbb-df2g8     0/1     Completed           2 (33s ago)    9m3s
-nginx-app-8ff4b4fbb-df2g8     0/1     Completed           2 (33s ago)    9m3s
-nginx-app-8ff4b4fbb-zrncz     0/1     Completed           2 (33s ago)    9m2s
-nginx-app-6495d87fb7-ktp7m    0/1     ContainerCreating   0              1s
-nginx-app-6495d87fb7-ktp7m    1/1     Running             0              1s
-nginx-app-8ff4b4fbb-q8sm8     1/1     Terminating         2 (34s ago)    9m3s
-nginx-app-8ff4b4fbb-q8sm8     1/1     Terminating         2 (34s ago)    9m3s
-nginx-app-8ff4b4fbb-q8sm8     0/1     Completed           2 (34s ago)    9m3s
-nginx-app-8ff4b4fbb-zrncz     0/1     Completed           2 (34s ago)    9m3s
-nginx-app-8ff4b4fbb-zrncz     0/1     Completed           2 (34s ago)    9m3s
-nginx-app-8ff4b4fbb-q8sm8     0/1     Completed           2 (34s ago)    9m3s
-nginx-app-8ff4b4fbb-q8sm8     0/1     Completed           2 (34s ago)    9m3s
-nginx-app-7764b65576-4svrp    0/1     Pending             0              0s
-nginx-app-7764b65576-4svrp    0/1     Pending             0              0s
-nginx-app-7764b65576-4svrp    0/1     ContainerCreating   0              0s
-nginx-app-7764b65576-4svrp    0/1     ContainerCreating   0              0s
-nginx-app-7764b65576-4svrp    1/1     Running             0              0s
-nginx-app-6495d87fb7-ktp7m    1/1     Terminating         0              2s
-nginx-app-6495d87fb7-ktp7m    1/1     Terminating         0              2s
-nginx-app-7764b65576-h5pmw    0/1     Pending             0              0s
-nginx-app-7764b65576-h5pmw    0/1     Pending             0              0s
-nginx-app-7764b65576-h5pmw    0/1     ContainerCreating   0              0s
-nginx-app-6495d87fb7-ktp7m    0/1     Completed           0              2s
-nginx-app-7764b65576-h5pmw    0/1     ContainerCreating   0              1s
-nginx-app-7764b65576-h5pmw    1/1     Running             0              1s
-nginx-app-6495d87fb7-jb7n4    1/1     Terminating         0              3s
-nginx-app-6495d87fb7-jb7n4    1/1     Terminating         0              3s
-nginx-app-7764b65576-pnf9p    0/1     Pending             0              0s
-nginx-app-7764b65576-pnf9p    0/1     Pending             0              0s
-nginx-app-7764b65576-pnf9p    0/1     ContainerCreating   0              0s
-nginx-app-6495d87fb7-jb7n4    0/1     Completed           0              3s
-nginx-app-7764b65576-pnf9p    0/1     ContainerCreating   0              0s
-nginx-app-7764b65576-pnf9p    1/1     Running             0              0s
-nginx-app-6495d87fb7-qsd8d    1/1     Terminating         0              4s
-nginx-app-6495d87fb7-jb7n4    0/1     Completed           0              3s
-nginx-app-6495d87fb7-jb7n4    0/1     Completed           0              3s
-nginx-app-6495d87fb7-ktp7m    0/1     Completed           0              3s
-nginx-app-6495d87fb7-ktp7m    0/1     Completed           0              3s
-nginx-app-6495d87fb7-qsd8d    1/1     Terminating         0              4s
-nginx-app-6495d87fb7-qsd8d    0/1     Completed           0              4s
-nginx-app-6495d87fb7-qsd8d    0/1     Completed           0              5s
-nginx-app-6495d87fb7-qsd8d    0/1     Completed           0              5s
-api-service-d9dfc5bb5-rcld2   1/1     Running             4 (86s ago)    23m
-nginx-app-7764b65576-4svrp    1/1     Running             0              73s
-nginx-app-7764b65576-pnf9p    1/1     Running             0              89s
-nginx-app-7764b65576-h5pmw    1/1     Running             0              2m7s
-nginx-app-7764b65576-h5pmw    1/1     Running             0              3m32s
+NAME                          READY   STATUS    RESTARTS         AGE
+api-service-d9dfc5bb5-rcld2   1/1     Running   12 (2m21s ago)   50m
+nginx-app-7764b65576-4svrp    1/1     Running   8 (2m21s ago)    28m
+nginx-app-7764b65576-h5pmw    1/1     Running   8 (2m21s ago)    28m
+nginx-app-7764b65576-pnf9p    1/1     Running   8 (2m21s ago)    28m
+test-pod                      1/1     Running   28 (2m21s ago)   7d3h
+test-pod                      0/1     Unknown   28 (2m22s ago)   7d3h
+nginx-app-7764b65576-4svrp    0/1     Unknown   8 (2m22s ago)    28m
+api-service-d9dfc5bb5-rcld2   0/1     Unknown   12 (2m22s ago)   50m
+nginx-app-7764b65576-pnf9p    0/1     Unknown   8 (2m22s ago)    28m
+nginx-app-7764b65576-h5pmw    0/1     Unknown   8 (2m22s ago)    28m
+nginx-app-7764b65576-h5pmw    0/1     Unknown   8 (2m22s ago)    28m
+nginx-app-7764b65576-h5pmw    1/1     Running   9 (5s ago)       28m
+test-pod                      0/1     Unknown   28 (2m23s ago)   7d3h
+nginx-app-7764b65576-4svrp    0/1     Unknown   8 (2m23s ago)    28m
+nginx-app-7764b65576-pnf9p    0/1     Unknown   8 (2m24s ago)    28m
+api-service-d9dfc5bb5-rcld2   0/1     Unknown   12 (2m24s ago)   50m
+test-pod                      1/1     Running   29 (6s ago)      7d3h
+nginx-app-7764b65576-4svrp    1/1     Running   9 (6s ago)       28m
+nginx-app-7764b65576-pnf9p    1/1     Running   9 (6s ago)       28m
+api-service-d9dfc5bb5-rcld2   1/1     Running   13 (8s ago)      50m
+api-service-d9dfc5bb5-rcld2   1/1     Running   13 (83s ago)     52m
+nginx-app-7764b65576-4svrp    1/1     Running   9 (93s ago)      29m
+test-pod                      1/1     Running   29 (2m18s ago)   7d3h
+nginx-app-7764b65576-pnf9p    1/1     Running   9 (2m19s ago)    30m
