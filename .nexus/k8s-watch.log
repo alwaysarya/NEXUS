@@ -1,1 +1,69 @@
-The connection to the server 127.0.0.1:53206 was refused - did you specify the right host or port?
+NAME                          READY   STATUS    RESTARTS       AGE
+api-service-d9dfc5bb5-rcld2   1/1     Running   4 (16s ago)    22m
+nginx-app-8ff4b4fbb-df2g8     1/1     Running   2 (16s ago)    8m46s
+nginx-app-8ff4b4fbb-q8sm8     1/1     Running   2 (16s ago)    8m45s
+nginx-app-8ff4b4fbb-zrncz     1/1     Running   2 (16s ago)    8m45s
+test-pod                      1/1     Running   20 (16s ago)   7d2h
+nginx-app-6495d87fb7-qsd8d    0/1     Pending   0              0s
+nginx-app-6495d87fb7-qsd8d    0/1     Pending   0              0s
+nginx-app-6495d87fb7-qsd8d    0/1     ContainerCreating   0              0s
+nginx-app-6495d87fb7-qsd8d    0/1     ContainerCreating   0              1s
+nginx-app-6495d87fb7-qsd8d    1/1     Running             0              1s
+nginx-app-8ff4b4fbb-df2g8     1/1     Terminating         2 (33s ago)    9m3s
+nginx-app-8ff4b4fbb-df2g8     1/1     Terminating         2 (33s ago)    9m3s
+nginx-app-6495d87fb7-jb7n4    0/1     Pending             0              0s
+nginx-app-6495d87fb7-jb7n4    0/1     Pending             0              0s
+nginx-app-6495d87fb7-jb7n4    0/1     ContainerCreating   0              0s
+nginx-app-8ff4b4fbb-df2g8     0/1     Completed           2 (33s ago)    9m3s
+nginx-app-6495d87fb7-jb7n4    0/1     ContainerCreating   0              0s
+nginx-app-6495d87fb7-jb7n4    1/1     Running             0              0s
+nginx-app-8ff4b4fbb-zrncz     1/1     Terminating         2 (33s ago)    9m2s
+nginx-app-8ff4b4fbb-zrncz     1/1     Terminating         2 (33s ago)    9m2s
+nginx-app-6495d87fb7-ktp7m    0/1     Pending             0              0s
+nginx-app-6495d87fb7-ktp7m    0/1     Pending             0              0s
+nginx-app-6495d87fb7-ktp7m    0/1     ContainerCreating   0              0s
+nginx-app-8ff4b4fbb-df2g8     0/1     Completed           2 (33s ago)    9m3s
+nginx-app-8ff4b4fbb-df2g8     0/1     Completed           2 (33s ago)    9m3s
+nginx-app-8ff4b4fbb-zrncz     0/1     Completed           2 (33s ago)    9m2s
+nginx-app-6495d87fb7-ktp7m    0/1     ContainerCreating   0              1s
+nginx-app-6495d87fb7-ktp7m    1/1     Running             0              1s
+nginx-app-8ff4b4fbb-q8sm8     1/1     Terminating         2 (34s ago)    9m3s
+nginx-app-8ff4b4fbb-q8sm8     1/1     Terminating         2 (34s ago)    9m3s
+nginx-app-8ff4b4fbb-q8sm8     0/1     Completed           2 (34s ago)    9m3s
+nginx-app-8ff4b4fbb-zrncz     0/1     Completed           2 (34s ago)    9m3s
+nginx-app-8ff4b4fbb-zrncz     0/1     Completed           2 (34s ago)    9m3s
+nginx-app-8ff4b4fbb-q8sm8     0/1     Completed           2 (34s ago)    9m3s
+nginx-app-8ff4b4fbb-q8sm8     0/1     Completed           2 (34s ago)    9m3s
+nginx-app-7764b65576-4svrp    0/1     Pending             0              0s
+nginx-app-7764b65576-4svrp    0/1     Pending             0              0s
+nginx-app-7764b65576-4svrp    0/1     ContainerCreating   0              0s
+nginx-app-7764b65576-4svrp    0/1     ContainerCreating   0              0s
+nginx-app-7764b65576-4svrp    1/1     Running             0              0s
+nginx-app-6495d87fb7-ktp7m    1/1     Terminating         0              2s
+nginx-app-6495d87fb7-ktp7m    1/1     Terminating         0              2s
+nginx-app-7764b65576-h5pmw    0/1     Pending             0              0s
+nginx-app-7764b65576-h5pmw    0/1     Pending             0              0s
+nginx-app-7764b65576-h5pmw    0/1     ContainerCreating   0              0s
+nginx-app-6495d87fb7-ktp7m    0/1     Completed           0              2s
+nginx-app-7764b65576-h5pmw    0/1     ContainerCreating   0              1s
+nginx-app-7764b65576-h5pmw    1/1     Running             0              1s
+nginx-app-6495d87fb7-jb7n4    1/1     Terminating         0              3s
+nginx-app-6495d87fb7-jb7n4    1/1     Terminating         0              3s
+nginx-app-7764b65576-pnf9p    0/1     Pending             0              0s
+nginx-app-7764b65576-pnf9p    0/1     Pending             0              0s
+nginx-app-7764b65576-pnf9p    0/1     ContainerCreating   0              0s
+nginx-app-6495d87fb7-jb7n4    0/1     Completed           0              3s
+nginx-app-7764b65576-pnf9p    0/1     ContainerCreating   0              0s
+nginx-app-7764b65576-pnf9p    1/1     Running             0              0s
+nginx-app-6495d87fb7-qsd8d    1/1     Terminating         0              4s
+nginx-app-6495d87fb7-jb7n4    0/1     Completed           0              3s
+nginx-app-6495d87fb7-jb7n4    0/1     Completed           0              3s
+nginx-app-6495d87fb7-ktp7m    0/1     Completed           0              3s
+nginx-app-6495d87fb7-ktp7m    0/1     Completed           0              3s
+nginx-app-6495d87fb7-qsd8d    1/1     Terminating         0              4s
+nginx-app-6495d87fb7-qsd8d    0/1     Completed           0              4s
+nginx-app-6495d87fb7-qsd8d    0/1     Completed           0              5s
+nginx-app-6495d87fb7-qsd8d    0/1     Completed           0              5s
+api-service-d9dfc5bb5-rcld2   1/1     Running             4 (86s ago)    23m
+nginx-app-7764b65576-4svrp    1/1     Running             0              73s
+nginx-app-7764b65576-pnf9p    1/1     Running             0              89s
