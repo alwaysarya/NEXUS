@@ -1,26 +1,28 @@
 import { useState, useEffect } from 'react';
-import { GitBranch, RotateCcw, Plus, ChevronRight, Activity, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
+import { GitBranch, RotateCcw, Plus, ChevronRight, Activity, CheckCircle2, Clock } from 'lucide-react';
 
 export default function DeploymentsPage() {
   const [deployments, setDeployments] = useState([]);
   const [metrics, setMetrics] = useState(null);
   const [repoInfo, setRepoInfo] = useState({ author: 'Loading...', branch: '...', commit: '...', message: '...' });
   const [logs, setLogs] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    // 1. Fetch real deployments from K8s
+  const fetchData = () => {
     fetch('http://127.0.0.1:8080/api/deployments')
       .then(res => res.json())
       .then(data => setDeployments(data))
       .catch(console.error);
 
-    // 2. Fetch real metrics (CPU, Memory)
     fetch('http://127.0.0.1:8080/api/real-metrics')
       .then(res => res.json())
       .then(data => setMetrics(data))
       .catch(console.error);
+  };
 
-    // 3. Fetch real Github commit info
+  useEffect(() => {
+    fetchData();
+
     fetch('https://api.github.com/repos/alwaysarya/NEXUS/commits/main')
       .then(res => res.json())
       .then(data => {
@@ -34,19 +36,33 @@ export default function DeploymentsPage() {
         }
       }).catch(console.error);
 
-    // 4. Live logs simulation based on actual real states
     const interval = setInterval(() => {
       setLogs(prev => [...prev.slice(-4), `[${new Date().toLocaleTimeString()}] [INFO] K8s sync: ${deployments.length} deployments active.`]);
-    }, 3000);
+    }, 4000);
 
     return () => clearInterval(interval);
   }, [deployments.length]);
+
+  const handleAction = async (action) => {
+    setIsLoading(true);
+    try {
+      await fetch('http://127.0.0.1:8080/api/deploy-action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, name: "nginx-app" })
+      });
+      alert(`${action.toUpperCase()} successful! K8s updating...`);
+      fetchData(); // Refresh data after action
+    } catch (e) {
+      alert("Error connecting to backend");
+    }
+    setIsLoading(false);
+  };
 
   const isDeployed = deployments.length > 0;
 
   return (
     <div className="flex flex-col gap-6 p-6 h-full w-full bg-background text-white overflow-y-auto">
-      {/* Header */}
       <div>
         <div className="flex items-center gap-2 text-gray-400 text-sm mb-2">
           <span>Deployments</span> <ChevronRight size={14} /> <span>nexus-api</span> <ChevronRight size={14} /> <span className="text-white">Release #{repoInfo.commit}</span>
@@ -57,14 +73,17 @@ export default function DeploymentsPage() {
             <p className="text-sm text-gray-400 mt-1">Build, test and deploy your application across environments with full CI/CD visibility.</p>
           </div>
           <div className="flex gap-3">
-            <button className="flex items-center gap-2 border border-border px-4 py-2 rounded-lg text-sm hover:bg-surface"><RotateCcw size={14}/> Re-run</button>
-            <button className="flex items-center gap-2 border border-border px-4 py-2 rounded-lg text-sm hover:bg-surface"><RotateCcw size={14}/> Rollback</button>
-            <button className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg text-sm hover:bg-primary/90"><Plus size={14}/> Release</button>
+            <button onClick={() => handleAction('restart')} disabled={isLoading} className="flex items-center gap-2 border border-border px-4 py-2 rounded-lg text-sm hover:bg-surface disabled:opacity-50">
+              <RotateCcw size={14}/> {isLoading ? 'Processing...' : 'Re-run'}
+            </button>
+            <button onClick={() => handleAction('rollback')} disabled={isLoading} className="flex items-center gap-2 border border-border px-4 py-2 rounded-lg text-sm hover:bg-surface disabled:opacity-50">
+              <RotateCcw size={14}/> Rollback
+            </button>
+            <button onClick={async () => { setIsLoading(true); await fetch("http://127.0.0.1:8080/api/create-release", {method: "POST"}); alert("Release created in K8s!"); fetchData(); setIsLoading(false); }} disabled={isLoading} className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg text-sm hover:bg-primary/90 disabled:opacity-50"><Plus size={14}/> {isLoading ? "Creating..." : "Release"}</button>
           </div>
         </div>
       </div>
 
-      {/* Repo Info Bar - Real GitHub Data */}
       <div className="bg-surface border border-border rounded-xl p-4 flex items-center justify-between text-sm">
         <div className="flex items-center gap-3">
           <GitBranch size={18} className="text-gray-400"/>
@@ -78,7 +97,6 @@ export default function DeploymentsPage() {
         </div>
       </div>
 
-      {/* Pipeline Steps - Real Status based on K8s Data */}
       <div className="bg-surface border border-border rounded-xl p-6 flex items-center justify-between">
         {['Code Checkout', 'Build', 'Test', 'Package', 'Deploy (Staging)', 'Deploy (Production)'].map((step, i) => {
           const isCompleted = isDeployed; 
@@ -96,9 +114,7 @@ export default function DeploymentsPage() {
         })}
       </div>
 
-      {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Release Info - Real GitHub Commit Message */}
         <div className="bg-surface border border-border rounded-xl p-5 flex flex-col gap-4">
           <div className="flex justify-between items-center">
             <h3 className="font-medium text-white">Release {repoInfo.commit}</h3>
@@ -116,12 +132,9 @@ export default function DeploymentsPage() {
           </div>
         </div>
 
-        {/* Pipeline Logs (Real-time simulation of K8s sync) */}
         <div className="bg-surface border border-border rounded-xl p-5 flex flex-col">
           <div className="flex gap-4 border-b border-border pb-3 mb-4 text-xs font-medium text-gray-400">
             <span className="text-white border-b-2 border-primary pb-3">Live Logs</span>
-            <span>Artifacts</span>
-            <span>Environments</span>
           </div>
           <div className="flex-1 bg-background border border-border rounded-lg p-3 font-mono text-[11px] text-gray-300 space-y-1 overflow-y-auto max-h-[250px]">
              <div className="text-green-500">[{new Date().toLocaleTimeString()}] [SUCCESS] Connected to K8s cluster.</div>
@@ -129,7 +142,6 @@ export default function DeploymentsPage() {
           </div>
         </div>
 
-        {/* Environments & Health (Real K8s + Mac stats) */}
         <div className="bg-surface border border-border rounded-xl p-5 flex flex-col gap-6">
           <div>
             <h3 className="font-medium text-white mb-3">Deployment Status</h3>
@@ -149,7 +161,6 @@ export default function DeploymentsPage() {
         </div>
       </div>
 
-      {/* Deployment History (Real K8s Deployments) */}
       <div className="bg-surface border border-border rounded-xl p-5">
         <h3 className="font-medium text-white mb-4 flex items-center gap-2"><Clock size={16}/> Deployment History</h3>
         <table className="w-full text-left text-sm">
